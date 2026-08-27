@@ -96,50 +96,28 @@ flagged as missing from Mathlib in `SpectralDecomposition.lean`'s module docstri
 `Mathlib.Analysis.Matrix.Spectrum`, `Mathlib.Analysis.InnerProductSpace.Spectrum`: only
 *per-eigenvalue* eigenspace projectors are available there, not a ranked prefix sum).
 
-Proof: orthonormality of `hA.eigenvectorBasis` gives `⟪uₖ, uₗ⟫ = δₖₗ` (`orthonormal_iff_ite`),
-hence, via `Matrix.vecMulVec_mul_vecMulVec`, termwise idempotency `(uₖuₖ*)(uₗuₗ*) = δₖₗ uₖuₖ*`; the
-whole prefix sum's idempotency then follows by distributing the product over the double sum
-(`Finset.sum_mul_sum`) and collapsing each inner sum to its `l = k` term (`Finset.sum_ite_eq`).
+Proof: idempotency follows by distributing the product over the double sum
+(`Finset.sum_mul_sum`) and collapsing each inner sum to its `l = k` term via
+`Matrix.IsHermitian.sortedRankOneProjector_mul` (`SpectralDecomposition.lean`, the shared
+orthogonality fact behind both this lemma and `Matrix.IsHermitian.isStarProjection_topProjector`).
 Self-adjointness is immediate since each `uₖuₖ*` is Hermitian (`Matrix.conjTranspose_vecMulVec`).
 Needed by `trace_mul_kronecker_le_sum_min_diff` to apply `trace_mul_kronecker_le_sum_min` to each
 `P_[j]`. -/
 theorem Matrix.IsHermitian.isStarProjection_sum_Iic_vecMulVec {A : Matrix dim1 dim1 𝕜}
     (hA : A.IsHermitian) (j : Fin (Fintype.card dim1)) :
-    IsStarProjection (∑ k ∈ Finset.Iic j,
-      Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))
-        (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k)))) := by
-  set e := Fintype.equivOfCardEq (Fintype.card_fin (Fintype.card dim1))
-  set P : Fin (Fintype.card dim1) → Matrix dim1 dim1 𝕜 :=
-    fun k => Matrix.vecMulVec (hA.eigenvectorBasis (e k)) (star (hA.eigenvectorBasis (e k)))
-    with hP_def
-  -- Orthonormality of the (sorted, reindexed) eigenbasis, as an inner-product Kronecker delta.
-  have horth : Orthonormal 𝕜 (fun k => hA.eigenvectorBasis (e k)) :=
-    hA.eigenvectorBasis.orthonormal.comp e e.injective
-  have hip := orthonormal_iff_ite.mp horth
-  -- Termwise product of the rank-one projectors: `(uₖuₖ*)(uₗuₗ*) = δₖₗ uₖuₖ*`, from
-  -- `Matrix.vecMulVec_mul_vecMulVec` plus the orthonormality Kronecker delta.
-  have hterm : ∀ k l : Fin (Fintype.card dim1), P k * P l = if k = l then P k else 0 := by
-    intro k l
-    simp only [hP_def]
-    rw [Matrix.vecMulVec_mul_vecMulVec]
-    have hdp : star ⇑(hA.eigenvectorBasis (e k)) ⬝ᵥ ⇑(hA.eigenvectorBasis (e l))
-        = if k = l then (1 : 𝕜) else 0 := by
-      rw [dotProduct_comm, ← EuclideanSpace.inner_eq_star_dotProduct]
-      exact hip k l
-    rw [hdp]
-    by_cases h : k = l <;> simp [h]
-  -- Idempotency: distribute the product over the double sum via `Finset.sum_mul_sum`, then
-  -- collapse the inner sum termwise via `hterm`.
-  have hidem : (∑ k ∈ Finset.Iic j, P k) * (∑ k ∈ Finset.Iic j, P k) = ∑ k ∈ Finset.Iic j, P k := by
+    IsStarProjection (∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k) := by
+  have hidem : (∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k)
+      * (∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k)
+      = ∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k := by
     rw [Finset.sum_mul_sum]
     refine Finset.sum_congr rfl fun k hk => ?_
-    rw [Finset.sum_congr rfl fun l _ => hterm k l]
+    rw [Finset.sum_congr rfl fun l _ => hA.sortedRankOneProjector_mul k l]
     simp [hk]
-  -- Self-adjointness: each term `uₖuₖ*` is Hermitian, hence so is the sum.
-  have hselfadj : star (∑ k ∈ Finset.Iic j, P k) = ∑ k ∈ Finset.Iic j, P k := by
+  have hselfadj : star (∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k)
+      = ∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k := by
     rw [star_sum]
     refine Finset.sum_congr rfl fun k _ => ?_
-    simp only [hP_def]
+    simp only [Matrix.IsHermitian.sortedRankOneProjector]
     rw [Matrix.star_eq_conjTranspose, Matrix.conjTranspose_vecMulVec, star_star]
   exact ⟨hidem, hselfadj⟩
 
@@ -147,35 +125,19 @@ theorem Matrix.IsHermitian.isStarProjection_sum_Iic_vecMulVec {A : Matrix dim1 d
 `Matrix.IsHermitian.isStarProjection_sum_Iic_vecMulVec`) has rank `j.val + 1`, the number of
 eigenvectors summed over. Rather than exhibiting the rank directly (which would need linear
 independence of the orthonormal eigenvectors `u₀, …, u_j`), we go via
-`IsStarProjection.trace_eq_rank` (`Projector.lean`): `P_[j]`'s trace is `j.val + 1` termwise (each
-`uᵢuᵢ*` has trace `uᵢ ⬝ᵥ star uᵢ = ⟪uᵢ,uᵢ⟫ = ‖uᵢ‖² = 1` by orthonormality), and equals its rank
-since `P_[j]` is a projector. -/
+`IsStarProjection.trace_eq_rank` (`Projector.lean`): `P_[j]`'s trace is `j.val + 1` termwise, each
+`uᵢuᵢ*` contributing `1` (`Matrix.IsHermitian.trace_sortedRankOneProjector`,
+`SpectralDecomposition.lean`), and equals its rank since `P_[j]` is a projector. -/
 theorem Matrix.IsHermitian.rank_sum_Iic_vecMulVec {A : Matrix dim1 dim1 𝕜}
     (hA : A.IsHermitian) (j : Fin (Fintype.card dim1)) :
-    (∑ k ∈ Finset.Iic j,
-      Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))
-        (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k)))).rank
-      = (j : ℕ) + 1 := by
-  -- Each `uᵢ ⬝ᵥ star uᵢ = ⟪uᵢ, uᵢ⟫ = ‖uᵢ‖² = 1`, by orthonormality of `hA.eigenvectorBasis`.
-  have hnorm : ∀ i : dim1, ⇑(hA.eigenvectorBasis i) ⬝ᵥ star ⇑(hA.eigenvectorBasis i) = (1 : 𝕜) := by
-    intro i
-    rw [← EuclideanSpace.inner_eq_star_dotProduct, inner_self_eq_norm_sq_to_K,
-      hA.eigenvectorBasis.orthonormal.1 i]
-    simp
-  -- So the trace of the sum is exactly the number of terms, `j.val + 1`.
-  have htrace : (∑ k ∈ Finset.Iic j,
-      Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))
-        (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k)))).trace
+    (∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k).rank = (j : ℕ) + 1 := by
+  -- The trace of the sum is exactly the number of terms, `j.val + 1`.
+  have htrace : (∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k).trace
       = (((j : ℕ) + 1 : ℕ) : 𝕜) := by
-    rw [Matrix.trace_sum,
-      Finset.sum_congr rfl fun k _ => Matrix.trace_vecMulVec _ _,
-      Finset.sum_congr rfl fun k _ => hnorm (Fintype.equivOfCardEq (Fintype.card_fin _) k),
+    rw [Matrix.trace_sum, Finset.sum_congr rfl fun k _ => hA.trace_sortedRankOneProjector k,
       Finset.sum_const, Fin.card_Iic, nsmul_eq_mul, mul_one]
-  -- The trace of a projector equals its rank (`Projector.lean`); combine with `htrace` and cancel
-  -- the (injective, char-zero) `ℕ → 𝕜` cast to get the `ℕ`-level equation.
-  have heq : ((∑ k ∈ Finset.Iic j,
-      Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))
-        (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k)))).rank : 𝕜)
+  -- Combine with `htrace` and cancel the (injective, char-zero) `ℕ → 𝕜` cast.
+  have heq : ((∑ k ∈ Finset.Iic j, hA.sortedRankOneProjector k).rank : 𝕜)
       = (((j : ℕ) + 1 : ℕ) : 𝕜) := by
     rw [← (hA.isStarProjection_sum_Iic_vecMulVec j).trace_eq_rank]
     exact htrace
@@ -314,9 +276,7 @@ theorem trace_mul_kronecker_le_sum_min_diff {Q : Matrix (dim1 × dim2) (dim1 × 
     exact Phi_posSemidef hQ.posSemidef (IsStarProjection.one (Matrix dim1 dim1 𝕜)).posSemidef
   have hμ_nonneg : ∀ k, 0 ≤ μ k := fun k => hQtraceLeft_posSemidef.eigenvalues₀_nonneg k
   -- The spectral-truncation projectors `P_[j]`, their projector property, and their rank.
-  set P : Fin d1 → Matrix dim1 dim1 𝕜 := fun j => ∑ k ∈ Finset.Iic j,
-    Matrix.vecMulVec (hAh.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin d1) k))
-      (star (hAh.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin d1) k)))
+  set P : Fin d1 → Matrix dim1 dim1 𝕜 := fun j => ∑ k ∈ Finset.Iic j, hAh.sortedRankOneProjector k
   have hPproj : ∀ j : Fin d1, IsStarProjection (P j) :=
     fun j => hAh.isStarProjection_sum_Iic_vecMulVec j
   have hPrank : ∀ j : Fin d1, (P j).rank = (j : ℕ) + 1 :=

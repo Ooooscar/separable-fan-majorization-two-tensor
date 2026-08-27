@@ -2,6 +2,7 @@ import Mathlib.Analysis.Matrix.Spectrum
 import Mathlib.Analysis.Convex.Birkhoff
 import Mathlib.LinearAlgebra.Matrix.Permutation
 import Mathlib.Algebra.Order.Rearrangement
+import NewProject.ForMathlib.SingularValue
 import NewProject.ForMathlib.SpectralDecomposition
 
 /-!
@@ -79,6 +80,25 @@ The main theorem then assembles 3–5: rewrite `Tr[AB]` via step 4, replace `ove
 using Birkhoff's `exists_eq_sum_perm_of_mem_doublyStochastic` (fed by step 3), swap the `∑_σ`/`∑ₖₗ`
 sums to turn `∑ₗ Sₖₗ βₗ` into `β(σ k)`, bound each permutation term by step 5, and average using
 `∑_σ w_σ = 1`.
+
+## General (non-Hermitian) case
+
+`Matrix.IsHermitian.trace_mul_le` above only applies to Hermitian `A`, `B`, pairing their *signed*
+`eigenvalues₀`. `Matrix.trace_mul_conjTranspose_le` below is the standard general form of von
+Neumann's trace inequality, for *arbitrary* square `A`, `B`, pairing their (always nonnegative)
+`Matrix.singularValues` (`SingularValue.lean`) instead: `Re Tr(A * Bᴴ) ≤ ∑ᵢ σᵢ(A) σᵢ(B)`. It does
+not follow from, and does not imply, the Hermitian statement above — singular values discard the
+sign information the eigenvalue pairing keeps — but it is exactly what `Matrix.kyFanNorm_add_le`'s
+roadmap (`KyFanNorm.lean`) needs, since the matrices sandwiched there (`Uᴴ*A*V`) are not Hermitian.
+
+The proof is a reduction to the Hermitian case above via the **Jordan–Wielandt dilation**
+`Ã := Matrix.fromBlocks 0 A Aᴴ 0` (`Matrix.isHermitian_fromBlocks_zero_conjTranspose`,
+`SingularValue.lean`): applying `Matrix.IsHermitian.trace_mul_le` to `Ã`, `B̃` gives `Tr(Ã*B̃) ≤ ∑ᵢ
+λᵢ(Ã)λᵢ(B̃)`. Block-multiplying out `Ã*B̃ = fromBlocks (A*Bᴴ) 0 0 (Aᴴ*B)` identifies the left side
+as `Tr(A*Bᴴ) + Tr(Aᴴ*B) = 2 • Re Tr(A*Bᴴ)` (via `Tr(Xᴴ) = conj (Tr X)` and cyclicity,
+`Tr(Aᴴ*B) = conj (Tr(A*Bᴴ))`); `Matrix.sum_eigenvalues₀_fromBlocks_zero_conjTranspose_mul_eq`
+(`SingularValue.lean`) rewrites the right side as `2 * ∑ᵢ σᵢ(A)σᵢ(B)`. Dividing by `2` gives the
+claim.
 -/
 
 open Matrix
@@ -268,3 +288,55 @@ theorem Matrix.IsHermitian.trace_mul_le {A B : Matrix n n 𝕜} (hA : A.IsHermit
       _ = (∑ σ, w σ) * ∑ k, α k * β k := by rw [Finset.sum_mul]
       _ = ∑ k, α k * β k := by rw [hw1, one_mul]
   exact_mod_cast key
+
+/-- **Von Neumann's trace inequality, general (non-Hermitian) case.** For *any* square `A, B :
+Matrix n n 𝕜` (not necessarily Hermitian, or even normal), `Re Tr(A * Bᴴ) ≤ ∑ᵢ σᵢ(A) σᵢ(B)`, where
+`σ(A)`, `σ(B)` are the singular values of `A`, `B` sorted in decreasing order
+(`Matrix.singularValues`, `SingularValue.lean`).
+
+See the module docstring's "General (non-Hermitian) case" section for the full roadmap: dilate `A`,
+`B` into Hermitian matrices `Ã := Matrix.fromBlocks 0 A Aᴴ 0`, `B̃ := Matrix.fromBlocks 0 B Bᴴ 0`
+(`Matrix.isHermitian_fromBlocks_zero_conjTranspose`, `SingularValue.lean`), apply
+`Matrix.IsHermitian.trace_mul_le` above to `Ã`, `B̃`, and rewrite both sides using block
+multiplication (left) and `Matrix.sum_eigenvalues₀_fromBlocks_zero_conjTranspose_mul_eq`
+(`SingularValue.lean`) on the right. -/
+theorem Matrix.trace_mul_conjTranspose_le (A B : Matrix n n 𝕜) :
+    RCLike.re (A * Bᴴ).trace
+      ≤ ∑ i : Fin (Fintype.card n), A.singularValues i * B.singularValues i := by
+  have hAdil : (Matrix.fromBlocks (0 : Matrix n n 𝕜) A Aᴴ 0).IsHermitian :=
+    Matrix.isHermitian_fromBlocks_zero_conjTranspose A
+  have hBdil : (Matrix.fromBlocks (0 : Matrix n n 𝕜) B Bᴴ 0).IsHermitian :=
+    Matrix.isHermitian_fromBlocks_zero_conjTranspose B
+  have htrace_le :
+      (Matrix.fromBlocks (0 : Matrix n n 𝕜) A Aᴴ 0
+          * Matrix.fromBlocks (0 : Matrix n n 𝕜) B Bᴴ 0).trace
+        ≤ (↑(∑ i, hAdil.eigenvalues₀ i * hBdil.eigenvalues₀ i) : 𝕜) :=
+    hAdil.trace_mul_le hBdil
+  rw [Matrix.sum_eigenvalues₀_fromBlocks_zero_conjTranspose_mul_eq A B] at htrace_le
+  -- Block-multiply out the dilations' product: `Ã*B̃ = fromBlocks (A*Bᴴ) 0 0 (Aᴴ*B)`.
+  have hmul : Matrix.fromBlocks (0 : Matrix n n 𝕜) A Aᴴ 0
+      * Matrix.fromBlocks (0 : Matrix n n 𝕜) B Bᴴ 0
+      = Matrix.fromBlocks (A * Bᴴ) 0 0 (Aᴴ * B) := by
+    rw [Matrix.fromBlocks_multiply]; simp
+  rw [hmul] at htrace_le
+  -- `Tr(fromBlocks X 0 0 W) = Tr X + Tr W`.
+  have htrace_fromBlocks : (Matrix.fromBlocks (A * Bᴴ) (0 : Matrix n n 𝕜) 0 (Aᴴ * B)).trace
+      = (A * Bᴴ).trace + (Aᴴ * B).trace := by
+    simp only [Matrix.trace, Matrix.diag_apply, Fintype.sum_sum_type, Matrix.fromBlocks_apply₁₁,
+      Matrix.fromBlocks_apply₂₂]
+  rw [htrace_fromBlocks] at htrace_le
+  -- `Tr(Aᴴ*B) = conj (Tr(A*Bᴴ))`, via cyclicity and `Tr(Xᴴ) = conj (Tr X)`.
+  have hAHB : (Aᴴ * B).trace = star (A * Bᴴ).trace := by
+    rw [Matrix.trace_mul_comm,
+      show B * Aᴴ = (A * Bᴴ)ᴴ by rw [Matrix.conjTranspose_mul, Matrix.conjTranspose_conjTranspose],
+      Matrix.trace_conjTranspose]
+  rw [hAHB] at htrace_le
+  -- `Tr(A*Bᴴ) + conj (Tr(A*Bᴴ)) = 2 * Re Tr(A*Bᴴ)`.
+  have hsplit : (A * Bᴴ).trace + star (A * Bᴴ).trace
+      = (↑(2 * RCLike.re (A * Bᴴ).trace) : 𝕜) := by
+    simp only [RCLike.star_def]; push_cast; exact RCLike.add_conj _
+  rw [hsplit] at htrace_le
+  have hcast_le : (2 : ℝ) * RCLike.re (A * Bᴴ).trace
+      ≤ 2 * ∑ i : Fin (Fintype.card n), A.singularValues i * B.singularValues i :=
+    RCLike.ofReal_le_ofReal.mp htrace_le
+  linarith

@@ -36,6 +36,9 @@ We define majorization for tuples `Fin n → ℝ`, the shape produced by
   bound for any such threshold set).
 * `Majorization.topSum_nonneg`: `topSum f k` is nonnegative when `f` is entrywise nonnegative.
   Needed by `Matrix.kyFanNorm_nonneg` (`KyFanNorm.lean`).
+* `Majorization.forall_eq_zero_of_topSum_eq_zero`: a nonnegative `f` with a vanishing top-`k` sum
+  (`k ≥ 1`) vanishes entirely. Needed by `Matrix.kyFanNorm_eq_zero_iff` (`KyFanNorm.lean`), the
+  definiteness half of exhibiting `kyFanNorm k` as a genuine norm.
 -/
 
 namespace Majorization
@@ -90,6 +93,52 @@ theorem topSum_comp_perm (f : Fin n → ℝ) (σ : Equiv.Perm (Fin n)) (k : ℕ)
     topSum (f ∘ σ) k = topSum f k := by
   unfold topSum
   rw [decreasingSort_comp_perm]
+
+/-- Scaling `f` by a nonnegative constant `c` scales `decreasingSort f` by the same constant:
+`c = 0` is immediate (both sides are the zero function), and for `c > 0`, `Tuple.sort` of `-(c•f)`
+and of `-f` agree because `Tuple.comp_sort_eq_comp_iff_monotone` characterizes `Tuple.sort g` as
+*the* permutation making `g ∘ σ` monotone, and monotonicity is unaffected by scaling by a positive
+constant. Needed by `topSum_smul` below. -/
+theorem decreasingSort_smul {f : Fin n → ℝ} {c : ℝ} (hc : 0 ≤ c) :
+    decreasingSort (c • f) = c • decreasingSort f := by
+  rcases hc.eq_or_lt with hc0 | hc0
+  · funext i
+    rw [← hc0]
+    unfold decreasingSort
+    simp
+  · have hmono : Monotone ((-f) ∘ Tuple.sort (-(c • f))) := by
+      intro i j hij
+      have h := Tuple.monotone_sort (-(c • f)) hij
+      simp only [Function.comp_apply, Pi.neg_apply, Pi.smul_apply, smul_eq_mul] at h ⊢
+      nlinarith [h]
+    have hkey : (-f) ∘ Tuple.sort (-(c • f)) = (-f) ∘ Tuple.sort (-f) :=
+      Tuple.comp_sort_eq_comp_iff_monotone.mpr hmono
+    have hi : ∀ i, f (Tuple.sort (-(c • f)) i) = f (Tuple.sort (-f) i) := fun i => by
+      have h := congrFun hkey i
+      simpa using h
+    funext i
+    unfold decreasingSort
+    simp only [Function.comp_apply, Pi.smul_apply, smul_eq_mul]
+    rw [hi i]
+
+/-- Scaling `f` by a nonnegative constant `c` scales `topSum f k` by the same constant: immediate
+from `decreasingSort_smul`. Needed by `Matrix.kyFanNorm_smul` (`KyFanNorm.lean`), in turn needed by
+the Cauchy–Schwarz inequality for Ky Fan norms (`KyFanCauchySchwarz.lean`). -/
+theorem topSum_smul {f : Fin n → ℝ} {c : ℝ} (hc : 0 ≤ c) (k : ℕ) :
+    topSum (c • f) k = c * topSum f k := by
+  unfold topSum
+  rw [decreasingSort_smul hc, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun i _ => by simp
+
+/-- `topSum f k` saturates at `k = n`: once `k ≥ n`, the filter defining `topSum` already covers
+every index of `Fin n`, so `topSum f k` equals `topSum f n` (the sum of *all* of `decreasingSort
+f`'s entries). Needed to extend a weak-majorization bound established only for `k ≤ n` (the range
+`WeakMajorizedBy` quantifies over) to every `k : ℕ`. -/
+theorem topSum_eq_topSum_of_le (f : Fin n → ℝ) {k : ℕ} (hk : n ≤ k) :
+    topSum f k = topSum f n := by
+  unfold topSum
+  rw [Finset.filter_true_of_mem (fun i _ => lt_of_lt_of_le i.2 hk),
+    Finset.filter_true_of_mem (fun i (_ : i ∈ Finset.univ) => i.2)]
 
 /-- `x` is *weakly majorized* by `y` if, for every `k`, the sum of the `k` largest entries of `x`
 is at most the sum of the `k` largest entries of `y`. -/
@@ -156,6 +205,24 @@ theorem exists_top_finset (w : Fin n → ℝ) (k : ℕ) (hk : k ≤ n) :
     rw [Fin.le_def]
     exact (lt_of_lt_of_le hi hj').le
   simpa using hanti hab
+
+/-- A nonnegative `f` with a vanishing top-`k` sum (`1 ≤ k ≤ n`) vanishes entirely: the top-`k`
+finset (`exists_top_finset`) is nonempty and dominates every other index, so if even its
+(nonnegative) entries sum to zero they must each be zero, and domination then forces every other
+entry to be squeezed between that zero ceiling and nonnegativity. -/
+theorem forall_eq_zero_of_topSum_eq_zero {f : Fin n → ℝ} (hf : ∀ i, 0 ≤ f i) {k : ℕ} (hk : 1 ≤ k)
+    (hkn : k ≤ n) (h : topSum f k = 0) : ∀ i, f i = 0 := by
+  obtain ⟨T, hTcard, hTsum, hdom⟩ := exists_top_finset f k hkn
+  have hTne : T.Nonempty := Finset.card_pos.mp (by rw [hTcard]; omega)
+  have hTzero : ∀ i ∈ T, f i = 0 :=
+    (Finset.sum_eq_zero_iff_of_nonneg (fun i _ => hf i)).mp (hTsum.trans h)
+  intro i
+  by_cases hi : i ∈ T
+  · exact hTzero i hi
+  · obtain ⟨j, hj⟩ := hTne
+    have hle : f i ≤ f j := hdom j hj i hi
+    rw [hTzero j hj] at hle
+    exact le_antisymm hle (hf i)
 
 /-- If `T` is a size-`k` subset of `Fin n` such that every `w`-entry inside `T` dominates every
 `w`-entry outside `T`, then weighting `w` by any `[0,1]`-valued `c` summing to `k` cannot beat the

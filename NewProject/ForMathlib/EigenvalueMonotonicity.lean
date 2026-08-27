@@ -26,11 +26,11 @@ index `k` (we don't need the full min-max *characterization*, only its proof tec
    exactly `B ≤ A`), then divide by `‖x‖² > 0`.
 
 This file builds that argument as a chain of lemmas, culminating in `eigenvalues₀_mono` (the
-pointwise form) and `eigenvalues₀_weakMajorizedBy` (the weak-majorization form). No `sorry`s
-remain: the two lemmas that carry the actual mathematical content are
-`exists_coeff_sum_and_quadraticForm_eq` (the eigen-expansion computation underlying steps 1-2) and
-`finrank_span_sortedEigenvectorBasis_image` (the dimension count for steps 1-2); everything else,
-including `eigenvalues₀_mono` itself, is bookkeeping given those two.
+pointwise form) and `eigenvalues₀_weakMajorizedBy` (the weak-majorization form). The two lemmas
+that carry the actual mathematical content are `exists_coeff_sum_and_quadraticForm_eq` (the
+eigen-expansion computation underlying steps 1-2) and `finrank_span_sortedEigenvectorBasis_image`
+(the dimension count for steps 1-2); everything else, including `eigenvalues₀_mono` itself, is
+bookkeeping given those two.
 -/
 
 open scoped Majorization ComplexOrder MatrixOrder Matrix
@@ -47,8 +47,9 @@ variable {A : Matrix n n 𝕜} (hA : A.IsHermitian)
 
 /-- `A`'s orthonormal eigenvectors, reindexed by `Fin (Fintype.card n)` so that
 `sortedEigenvectorBasis hA k` is a unit eigenvector for the `k`-th sorted (decreasing) eigenvalue
-`hA.eigenvalues₀ k`. Same reindexing as `SpectralDecomposition.lean`'s
-`sum_eigenvalue₀_smul_vecMulVec`. -/
+`hA.eigenvalues₀ k`. Also used directly by `SpectralDecomposition.lean`
+(`sum_eigenvalue₀_smul_vecMulVec`, `topProjector`, etc.) and `OverlapBound.lean`, rather than each
+site re-deriving this same reindexing inline. -/
 noncomputable def Matrix.IsHermitian.sortedEigenvectorBasis :
     Fin (Fintype.card n) → EuclideanSpace 𝕜 n :=
   fun k => hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k)

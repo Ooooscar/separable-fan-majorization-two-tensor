@@ -18,8 +18,8 @@ Ky Fan k-norm, each Schatten p-norm, the operator norm, ...). Field names (`smul
 match the corresponding fields of Mathlib's `Seminorm`/`AddGroupSeminorm`; `nonneg` is not a
 primitive field for the same reason it isn't one there — it is derivable from the others.
 
-This is the structure needed to eventually state and prove the Cauchy-Schwarz inequality for
-unitarily invariant norms, a tool towards `SumKroneckerWeakMajorization.lean`'s remaining `sorry`.
+This is the structure needed to state and prove the Cauchy-Schwarz inequality for
+unitarily invariant norms, a tool towards `SumKroneckerWeakMajorization.lean`'s final theorem.
 
 ## Main definitions
 

@@ -93,18 +93,16 @@ eigenvalues sorted in decreasing order (`eigenvalues₀`). This is the form need
 spectral-truncation/Abel-summation trick (see the roadmap above). -/
 theorem Matrix.IsHermitian.sum_eigenvalue₀_smul_vecMulVec {A : Matrix n n 𝕜} (hA : A.IsHermitian) :
     A = ∑ k : Fin (Fintype.card n), (hA.eigenvalues₀ k : 𝕜) •
-      Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))
-        (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))) := by
+      Matrix.vecMulVec (hA.sortedEigenvectorBasis k) (star (hA.sortedEigenvectorBasis k)) := by
   calc A = ∑ i, (hA.eigenvalues i : 𝕜) •
         Matrix.vecMulVec (hA.eigenvectorBasis i) (star (hA.eigenvectorBasis i)) :=
       hA.sum_eigenvalue_smul_vecMulVec
     _ = ∑ k : Fin (Fintype.card n), (hA.eigenvalues₀ k : 𝕜) •
-        Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))
-          (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))) := by
+        Matrix.vecMulVec (hA.sortedEigenvectorBasis k) (star (hA.sortedEigenvectorBasis k)) := by
       rw [← Equiv.sum_comp (Fintype.equivOfCardEq (Fintype.card_fin _))
         (fun i => (hA.eigenvalues i : 𝕜) •
           Matrix.vecMulVec (hA.eigenvectorBasis i) (star (hA.eigenvectorBasis i)))]
-      simp [Matrix.IsHermitian.eigenvalues]
+      simp [Matrix.IsHermitian.eigenvalues, Matrix.IsHermitian.sortedEigenvectorBasis]
 
 /-- **Resolution of identity**: a full orthonormal eigenbasis' rank-one projectors sum to the
 identity. Needed for the boundary term in the Abel-summation trick
@@ -126,8 +124,7 @@ boundary term of `Finset.sum_range_by_parts` with no further reindexing, unlike
 theorem Matrix.IsHermitian.sum_eigenvalue₀_vecMulVec_eq_one {A : Matrix n n 𝕜}
     (hA : A.IsHermitian) :
     (1 : Matrix n n 𝕜) = ∑ k : Fin (Fintype.card n),
-      Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))
-        (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))) :=
+      Matrix.vecMulVec (hA.sortedEigenvectorBasis k) (star (hA.sortedEigenvectorBasis k)) :=
   hA.sum_vecMulVec_eq_one.trans
     (Equiv.sum_comp (Fintype.equivOfCardEq (Fintype.card_fin _))
       (fun i => Matrix.vecMulVec (hA.eigenvectorBasis i) (star (hA.eigenvectorBasis i)))).symm
@@ -158,8 +155,8 @@ theorem Matrix.IsHermitian.sum_eigenvalue₀_diff_smul_sum_vecMulVec
             (if h : (j : ℕ) + 1 < Fintype.card n then (hA.eigenvalues₀ ⟨(j : ℕ) + 1, h⟩ : 𝕜)
               else 0)) •
           ∑ k ∈ Finset.Iic j,
-            Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))
-              (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k))) := by
+            Matrix.vecMulVec (hA.sortedEigenvectorBasis k)
+              (star (hA.sortedEigenvectorBasis k)) := by
   set d := Fintype.card n with hd_def
   set e := Fintype.equivOfCardEq (Fintype.card_fin d)
   set G : Fin d → Matrix n n 𝕜 :=
@@ -179,7 +176,7 @@ theorem Matrix.IsHermitian.sum_eigenvalue₀_diff_smul_sum_vecMulVec
   -- Step 1: `A` as a `range`-indexed sum of `f i • g i`.
   have step1 : A = ∑ i ∈ Finset.range d, f i • g i := by
     rw [hA.sum_eigenvalue₀_smul_vecMulVec, ← Fin.sum_univ_eq_sum_range (fun i => f i • g i) d]
-    exact Finset.sum_congr rfl fun k _ => by rw [hf k, hg k]
+    exact Finset.sum_congr rfl fun k _ => by rw [hf k, hg k]; rfl
   -- Step 2: resolution of identity as a `range`-indexed sum.
   have step2 : (1 : Matrix n n 𝕜) = ∑ i ∈ Finset.range d, g i := by
     rw [hA.sum_eigenvalue₀_vecMulVec_eq_one, ← Fin.sum_univ_eq_sum_range g d]
@@ -223,7 +220,49 @@ theorem Matrix.IsHermitian.sum_eigenvalue₀_diff_smul_sum_vecMulVec
 `j.val + 1 ∈ {1, …, Fintype.card n}`. `topProjector` below is the same construction generalized to
 an arbitrary rank `k : ℕ` (including `k = 0`, the zero projector), which is what's needed to state
 the Ky Fan equality `Tr[(topProjector k) * A] = topSum (eigenvalues₀) k` used by
-`majorized_sum_kronecker_sortedDiagonal` (`SumKroneckerMajorization.lean`). -/
+`majorized_sum_kronecker_sortedDiagonal` (`SumKroneckerMajorization.lean`).
+
+The two facts below about the summand `uₗuₗ*` — mutual orthogonality/idempotency
+(`sortedRankOneProjector_mul`) and unit trace (`trace_sortedRankOneProjector`) — are each the one
+piece of real content needed by *both* `isStarProjection_topProjector`/`rank_topProjector` here
+*and* `OverlapBound.lean`'s `isStarProjection_sum_Iic_vecMulVec`/`rank_sum_Iic_vecMulVec` (`P_[j]`
+being the same summand over a different index set), so they are named and proved once here rather
+than re-derived at each of the four call sites. -/
+
+/-- The rank-one summand of `topProjector`/`P_[j]`: the projector `uₗuₗ*` onto `A`'s `l`-th sorted
+eigenvector. Naming this makes `sortedRankOneProjector_mul`/`trace_sortedRankOneProjector` below
+directly reusable, instead of each consuming proof re-deriving them against an ad-hoc local `set`.
+-/
+noncomputable def Matrix.IsHermitian.sortedRankOneProjector {A : Matrix n n 𝕜} (hA : A.IsHermitian)
+    (l : Fin (Fintype.card n)) : Matrix n n 𝕜 :=
+  Matrix.vecMulVec (hA.sortedEigenvectorBasis l) (star (hA.sortedEigenvectorBasis l))
+
+/-- The sorted rank-one projectors are mutually orthogonal idempotents:
+`(uₖuₖ*)(uₗuₗ*) = δₖₗ (uₖuₖ*)`. From orthonormality of `hA.eigenvectorBasis`
+(`orthonormal_iff_ite`) via `Matrix.vecMulVec_mul_vecMulVec`. -/
+theorem Matrix.IsHermitian.sortedRankOneProjector_mul {A : Matrix n n 𝕜} (hA : A.IsHermitian)
+    (k l : Fin (Fintype.card n)) :
+    hA.sortedRankOneProjector k * hA.sortedRankOneProjector l =
+      if k = l then hA.sortedRankOneProjector k else 0 := by
+  simp only [Matrix.IsHermitian.sortedRankOneProjector]
+  rw [Matrix.vecMulVec_mul_vecMulVec]
+  have hdp : star ⇑(hA.sortedEigenvectorBasis k) ⬝ᵥ ⇑(hA.sortedEigenvectorBasis l)
+      = if k = l then (1 : 𝕜) else 0 := by
+    rw [dotProduct_comm, ← EuclideanSpace.inner_eq_star_dotProduct]
+    exact orthonormal_iff_ite.mp
+      (hA.eigenvectorBasis.orthonormal.comp (Fintype.equivOfCardEq (Fintype.card_fin _))
+        (Fintype.equivOfCardEq (Fintype.card_fin _)).injective) k l
+  rw [hdp]
+  by_cases h : k = l <;> simp [h]
+
+/-- Each sorted rank-one projector has trace `1`: `Tr[uₗuₗ*] = ⟪uₗ,uₗ⟫ = ‖uₗ‖² = 1`, by
+orthonormality of `hA.eigenvectorBasis`. -/
+theorem Matrix.IsHermitian.trace_sortedRankOneProjector {A : Matrix n n 𝕜} (hA : A.IsHermitian)
+    (l : Fin (Fintype.card n)) : (hA.sortedRankOneProjector l).trace = (1 : 𝕜) := by
+  simp only [Matrix.IsHermitian.sortedRankOneProjector, Matrix.IsHermitian.sortedEigenvectorBasis]
+  rw [Matrix.trace_vecMulVec, ← EuclideanSpace.inner_eq_star_dotProduct,
+    inner_self_eq_norm_sq_to_K, hA.eigenvectorBasis.orthonormal.1]
+  simp
 
 /-- The rank-`k` spectral truncation projector of a Hermitian `A`: the sum of the rank-one
 projectors onto `A`'s `k` top (sorted-eigenvalue) eigenvectors. Generalizes `P_[j]`
@@ -232,73 +271,46 @@ projectors onto `A`'s `k` top (sorted-eigenvalue) eigenvectors. Generalizes `P_[
 noncomputable def Matrix.IsHermitian.topProjector {A : Matrix n n 𝕜} (hA : A.IsHermitian)
     (k : ℕ) : Matrix n n 𝕜 :=
   ∑ l ∈ Finset.univ.filter (fun l : Fin (Fintype.card n) => (l : ℕ) < k),
-    Matrix.vecMulVec (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) l))
-      (star (hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) l)))
+    hA.sortedRankOneProjector l
 
-/-- `hA.topProjector k` is a projector: the generalization of
+/-- `hA.topProjector k` is a projector: idempotency follows by distributing the product over the
+double sum (`Finset.sum_mul_sum`) and collapsing each inner sum to its `l = k` term via
+`sortedRankOneProjector_mul`; self-adjointness is immediate since each `uₗuₗ*` is Hermitian
+(`Matrix.conjTranspose_vecMulVec`). Generalizes
 `Matrix.IsHermitian.isStarProjection_sum_Iic_vecMulVec` (`OverlapBound.lean`, the `k = j.val + 1`
-case) to an arbitrary rank `k`, including `k = 0` (the zero projector). Same orthonormality
-argument (`orthonormal_iff_ite` + `Matrix.vecMulVec_mul_vecMulVec`) as that lemma. -/
+case) to an arbitrary rank `k`, including `k = 0` (the zero projector). -/
 theorem Matrix.IsHermitian.isStarProjection_topProjector {A : Matrix n n 𝕜} (hA : A.IsHermitian)
     (k : ℕ) : IsStarProjection (hA.topProjector k) := by
   unfold Matrix.IsHermitian.topProjector
-  set e := Fintype.equivOfCardEq (Fintype.card_fin (Fintype.card n))
   set S := Finset.univ.filter (fun l : Fin (Fintype.card n) => (l : ℕ) < k)
-  set P : Fin (Fintype.card n) → Matrix n n 𝕜 :=
-    fun l => Matrix.vecMulVec (hA.eigenvectorBasis (e l)) (star (hA.eigenvectorBasis (e l)))
-    with hP_def
-  -- Orthonormality of the (reindexed) eigenbasis, as an inner-product Kronecker delta.
-  have horth : Orthonormal 𝕜 (fun l => hA.eigenvectorBasis (e l)) :=
-    hA.eigenvectorBasis.orthonormal.comp e e.injective
-  have hip := orthonormal_iff_ite.mp horth
-  -- Termwise product of the rank-one projectors: `(uₖuₖ*)(uₗuₗ*) = δₖₗ uₖuₖ*`.
-  have hterm : ∀ k1 k2 : Fin (Fintype.card n), P k1 * P k2 = if k1 = k2 then P k1 else 0 := by
-    intro k1 k2
-    simp only [hP_def]
-    rw [Matrix.vecMulVec_mul_vecMulVec]
-    have hdp : star ⇑(hA.eigenvectorBasis (e k1)) ⬝ᵥ ⇑(hA.eigenvectorBasis (e k2))
-        = if k1 = k2 then (1 : 𝕜) else 0 := by
-      rw [dotProduct_comm, ← EuclideanSpace.inner_eq_star_dotProduct]
-      exact hip k1 k2
-    rw [hdp]
-    by_cases h : k1 = k2 <;> simp [h]
-  -- Idempotency: distribute the product over the double sum, then collapse termwise via `hterm`.
-  have hidem : (∑ l ∈ S, P l) * (∑ l ∈ S, P l) = ∑ l ∈ S, P l := by
+  have hidem : (∑ l ∈ S, hA.sortedRankOneProjector l) * (∑ l ∈ S, hA.sortedRankOneProjector l)
+      = ∑ l ∈ S, hA.sortedRankOneProjector l := by
     rw [Finset.sum_mul_sum]
     refine Finset.sum_congr rfl fun l hl => ?_
-    rw [Finset.sum_congr rfl fun l2 _ => hterm l l2]
+    rw [Finset.sum_congr rfl fun l2 _ => hA.sortedRankOneProjector_mul l l2]
     simp [hl]
-  -- Self-adjointness: each term `uₖuₖ*` is Hermitian, hence so is the sum.
-  have hselfadj : star (∑ l ∈ S, P l) = ∑ l ∈ S, P l := by
+  have hselfadj : star (∑ l ∈ S, hA.sortedRankOneProjector l) = ∑ l ∈ S, hA.sortedRankOneProjector l
+      := by
     rw [star_sum]
     refine Finset.sum_congr rfl fun l _ => ?_
-    simp only [hP_def]
+    simp only [Matrix.IsHermitian.sortedRankOneProjector]
     rw [Matrix.star_eq_conjTranspose, Matrix.conjTranspose_vecMulVec, star_star]
   exact ⟨hidem, hselfadj⟩
 
-/-- `hA.topProjector k` has rank exactly `k` (for `k ≤ Fintype.card n`): the generalization of
-`Matrix.IsHermitian.rank_sum_Iic_vecMulVec` (`OverlapBound.lean`) to an arbitrary rank `k`, via
-`IsStarProjection.trace_eq_rank` (`Projector.lean`) exactly as in that lemma. -/
+/-- `hA.topProjector k` has rank exactly `k` (for `k ≤ Fintype.card n`): its trace is exactly the
+number of terms, `k` (`trace_sortedRankOneProjector`), and the trace of a projector equals its rank
+(`IsStarProjection.trace_eq_rank`, `Projector.lean`). Generalizes
+`Matrix.IsHermitian.rank_sum_Iic_vecMulVec` (`OverlapBound.lean`) to an arbitrary rank `k`. -/
 theorem Matrix.IsHermitian.rank_topProjector {A : Matrix n n 𝕜} (hA : A.IsHermitian) (k : ℕ)
     (hk : k ≤ Fintype.card n) : (hA.topProjector k).rank = k := by
   -- The filter set indexing `topProjector k` has exactly `k` elements, since `k ≤ Fintype.card n`.
   have hcard : (Finset.univ.filter (fun l : Fin (Fintype.card n) => (l : ℕ) < k)).card = k := by
     rw [Fin.card_filter_val_lt, min_eq_right hk]
-  -- Each `uᵢ ⬝ᵥ star uᵢ = ⟪uᵢ, uᵢ⟫ = ‖uᵢ‖² = 1`, by orthonormality of `hA.eigenvectorBasis`.
-  have hnorm : ∀ i : n, ⇑(hA.eigenvectorBasis i) ⬝ᵥ star ⇑(hA.eigenvectorBasis i) = (1 : 𝕜) := by
-    intro i
-    rw [← EuclideanSpace.inner_eq_star_dotProduct, inner_self_eq_norm_sq_to_K,
-      hA.eigenvectorBasis.orthonormal.1 i]
-    simp
-  -- So the trace of `topProjector k` is exactly the number of terms, `k`.
   have htrace : (hA.topProjector k).trace = (k : 𝕜) := by
     unfold Matrix.IsHermitian.topProjector
-    rw [Matrix.trace_sum,
-      Finset.sum_congr rfl fun l _ => Matrix.trace_vecMulVec _ _,
-      Finset.sum_congr rfl fun l _ => hnorm (Fintype.equivOfCardEq (Fintype.card_fin _) l),
+    rw [Matrix.trace_sum, Finset.sum_congr rfl fun l _ => hA.trace_sortedRankOneProjector l,
       Finset.sum_const, hcard, nsmul_eq_mul, mul_one]
-  -- The trace of a projector equals its rank (`Projector.lean`); combine with `htrace` and cancel
-  -- the (injective, char-zero) `ℕ → 𝕜` cast to get the `ℕ`-level equation.
+  -- Combine with `htrace` and cancel the (injective, char-zero) `ℕ → 𝕜` cast.
   have heq : ((hA.topProjector k).rank : 𝕜) = (k : 𝕜) := by
     rw [← (hA.isStarProjection_topProjector k).trace_eq_rank]
     exact htrace
@@ -306,58 +318,35 @@ theorem Matrix.IsHermitian.rank_topProjector {A : Matrix n n 𝕜} (hA : A.IsHer
 
 /-- The "self" Ky Fan equality: pairing `A` with its own rank-`k` spectral truncation projector
 recovers the sum of its `k` largest eigenvalues. Expand both `hA.topProjector k` and `A` in the
-same eigenbasis (`sum_eigenvalue₀_smul_vecMulVec`) — the cross terms collapse via the same
-orthonormality Kronecker-delta computation as `isStarProjection_topProjector`, and since
-`eigenvalues₀` is antitone, the resulting prefix sum literally is `topSum`. Needed (applied to
-`A := ∑ᵢ A⁽ⁱ⁾⊗B⁽ⁱ⁾`) for the weak-majorization half of `majorized_sum_kronecker_sortedDiagonal`
+same eigenbasis (`sum_eigenvalue₀_smul_vecMulVec`) — the cross terms collapse via
+`sortedRankOneProjector_mul`/`trace_sortedRankOneProjector`, and since `eigenvalues₀` is antitone,
+the resulting prefix sum literally is `topSum`. Needed (applied to `A := ∑ᵢ A⁽ⁱ⁾⊗B⁽ⁱ⁾`) for the
+weak-majorization half of `majorized_sum_kronecker_sortedDiagonal`
 (`SumKroneckerMajorization.lean`). -/
 theorem Matrix.IsHermitian.trace_mul_topProjector_self {A : Matrix n n 𝕜} (hA : A.IsHermitian)
     (k : ℕ) :
     (hA.topProjector k * A).trace = ((Majorization.topSum hA.eigenvalues₀ k : ℝ) : 𝕜) := by
   classical
-  set e := Fintype.equivOfCardEq (Fintype.card_fin (Fintype.card n))
-  set G : Fin (Fintype.card n) → Matrix n n 𝕜 :=
-    fun l => Matrix.vecMulVec (hA.eigenvectorBasis (e l)) (star (hA.eigenvectorBasis (e l)))
-    with hG_def
-  -- Orthonormality Kronecker delta, as in `isStarProjection_topProjector`.
-  have horth : Orthonormal 𝕜 (fun l => hA.eigenvectorBasis (e l)) :=
-    hA.eigenvectorBasis.orthonormal.comp e e.injective
-  have hip := orthonormal_iff_ite.mp horth
-  have hterm : ∀ l l' : Fin (Fintype.card n), G l * G l' = if l = l' then G l else 0 := by
-    intro l l'
-    simp only [hG_def]
-    rw [Matrix.vecMulVec_mul_vecMulVec]
-    have hdp : star ⇑(hA.eigenvectorBasis (e l)) ⬝ᵥ ⇑(hA.eigenvectorBasis (e l'))
-        = if l = l' then (1 : 𝕜) else 0 := by
-      rw [dotProduct_comm, ← EuclideanSpace.inner_eq_star_dotProduct]
-      exact hip l l'
-    rw [hdp]
-    by_cases h : l = l' <;> simp [h]
-  have hnorm : ∀ i : n, ⇑(hA.eigenvectorBasis i) ⬝ᵥ star ⇑(hA.eigenvectorBasis i) = (1 : 𝕜) := by
-    intro i
-    rw [← EuclideanSpace.inner_eq_star_dotProduct, inner_self_eq_norm_sq_to_K,
-      hA.eigenvectorBasis.orthonormal.1 i]
-    simp
-  have htraceG : ∀ l : Fin (Fintype.card n), (G l).trace = (1 : 𝕜) := by
-    intro l
-    simp only [hG_def]
-    rw [Matrix.trace_vecMulVec]
-    exact hnorm (e l)
+  set P := hA.sortedRankOneProjector with hP_def
   -- Expand `A` in the same eigenbasis used by `topProjector k`.
-  have hAdecomp : A = ∑ l : Fin (Fintype.card n), (hA.eigenvalues₀ l : 𝕜) • G l :=
+  have hAdecomp : A = ∑ l : Fin (Fintype.card n), (hA.eigenvalues₀ l : 𝕜) • P l :=
     hA.sum_eigenvalue₀_smul_vecMulVec
   have htopProjector_eq :
       hA.topProjector k = ∑ l ∈ Finset.univ.filter (fun l : Fin (Fintype.card n) => (l : ℕ) < k),
-        G l := rfl
-  -- Trace of the product, expanded termwise via linearity and `hterm`.
+        P l := rfl
+  have hPmul : ∀ l l' : Fin (Fintype.card n), P l * P l' = if l = l' then P l else 0 := fun l l' =>
+    hA.sortedRankOneProjector_mul l l'
+  have hPtrace : ∀ l : Fin (Fintype.card n), (P l).trace = (1 : 𝕜) := fun l =>
+    hA.trace_sortedRankOneProjector l
+  -- Trace of the product, expanded termwise via linearity and `hPmul`.
   have hstep : (hA.topProjector k * A).trace
       = ∑ l ∈ Finset.univ.filter (fun l : Fin (Fintype.card n) => (l : ℕ) < k),
-          ∑ l' : Fin (Fintype.card n), (hA.eigenvalues₀ l' : 𝕜) * (G l * G l').trace := by
+          ∑ l' : Fin (Fintype.card n), (hA.eigenvalues₀ l' : 𝕜) * (P l * P l').trace := by
     -- `congrArg`, not `rw`, to substitute `A`: `rw [hAdecomp]` would try to abstract the bare
     -- term `A`, which also appears (as an implicit argument) inside `hA`-dependent subterms like
     -- `hA.eigenvalues₀`, producing an ill-typed motive.
     have hprodA : hA.topProjector k * A
-        = hA.topProjector k * ∑ l' : Fin (Fintype.card n), (hA.eigenvalues₀ l' : 𝕜) • G l' :=
+        = hA.topProjector k * ∑ l' : Fin (Fintype.card n), (hA.eigenvalues₀ l' : 𝕜) • P l' :=
       congrArg (fun M => hA.topProjector k * M) hAdecomp
     rw [hprodA, htopProjector_eq, Finset.sum_mul, Matrix.trace_sum]
     refine Finset.sum_congr rfl fun l _ => ?_
@@ -365,18 +354,18 @@ theorem Matrix.IsHermitian.trace_mul_topProjector_self {A : Matrix n n 𝕜} (hA
     refine Finset.sum_congr rfl fun l' _ => ?_
     rw [mul_smul_comm, Matrix.trace_smul, smul_eq_mul]
   rw [hstep]
-  -- Cross terms collapse via `hterm`/`htraceG`, leaving just the diagonal `eigenvalues₀ l`.
+  -- Cross terms collapse via `hPmul`/`hPtrace`, leaving just the diagonal `eigenvalues₀ l`.
   have hcollapse : ∀ l ∈ Finset.univ.filter (fun l : Fin (Fintype.card n) => (l : ℕ) < k),
-      ∑ l' : Fin (Fintype.card n), (hA.eigenvalues₀ l' : 𝕜) * (G l * G l').trace
+      ∑ l' : Fin (Fintype.card n), (hA.eigenvalues₀ l' : 𝕜) * (P l * P l').trace
         = (hA.eigenvalues₀ l : 𝕜) := by
     intro l _
     have hswap : ∀ l' : Fin (Fintype.card n),
-        (hA.eigenvalues₀ l' : 𝕜) * (G l * G l').trace
+        (hA.eigenvalues₀ l' : 𝕜) * (P l * P l').trace
           = if l = l' then (hA.eigenvalues₀ l : 𝕜) else 0 := by
       intro l'
-      rw [hterm l l']
+      rw [hPmul l l']
       by_cases h : l = l'
-      · simp [h, htraceG]
+      · simp [h, hPtrace]
       · simp [h]
     rw [Finset.sum_congr rfl fun l' _ => hswap l']
     simp
