@@ -1,5 +1,3 @@
-import NewProject.ForMathlib.SingularValue
-import NewProject.ForMathlib.MatrixAbs
 import NewProject.ForMathlib.PolarDecomposition
 import NewProject.ForMathlib.KyFanCauchySchwarz
 import NewProject.SumKroneckerMajorization

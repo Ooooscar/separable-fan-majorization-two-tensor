@@ -1,11 +1,5 @@
-import Mathlib.Analysis.Matrix.Spectrum
-import Mathlib.LinearAlgebra.Matrix.PosDef
-import Mathlib.Algebra.BigOperators.Module
-import Mathlib.Algebra.Star.UnitaryStarAlgAut
-import Mathlib.Algebra.Star.StarProjection
 import NewProject.ForMathlib.Majorization
 import NewProject.ForMathlib.Projector
-import NewProject.ForMathlib.EigenvalueMonotonicity
 
 /-!
 # Spectral decomposition as a sum of rank-one projectors
@@ -213,6 +207,19 @@ theorem Matrix.IsHermitian.sum_eigenvalue₀_diff_smul_sum_vecMulVec
             ∑ k ∈ Finset.Iic j, G k :=
         Finset.sum_congr rfl fun j _ => by rw [hf j, hβ j, step3 j]
 
+/-- The full sum of a Hermitian matrix's (sorted) eigenvalues is its trace — the `eigenvalues₀`
+counterpart of Mathlib's `Matrix.IsHermitian.trace_eq_sum_eigenvalues` (which sums the
+matrix-indexed `.eigenvalues` instead). Reindexes along `Fintype.equivOfCardEq (Fintype.card_fin
+_) : Fin (Fintype.card n) ≃ n`, the same equiv `.eigenvalues` is defined through. Needed for the
+"equal totals" half of `majorized_sum_kronecker_sortedDiagonal` (`SumKroneckerMajorization.lean`).
+-/
+theorem Matrix.IsHermitian.sum_eigenvalues₀_eq_trace {A : Matrix n n 𝕜} (hA : A.IsHermitian) :
+    (∑ j, (hA.eigenvalues₀ j : 𝕜)) = A.trace := by
+  rw [hA.trace_eq_sum_eigenvalues]
+  exact Fintype.sum_equiv (Fintype.equivOfCardEq (Fintype.card_fin (Fintype.card n)))
+    (fun j => (hA.eigenvalues₀ j : 𝕜)) (fun i => (hA.eigenvalues i : 𝕜))
+    (fun j => by simp [Matrix.IsHermitian.eigenvalues])
+
 /-! ## The rank-`k` spectral truncation projector
 
 `P_[j] := ∑_{k ≤ j} uₖuₖ*` (`OverlapBound.lean`'s `isStarProjection_sum_Iic_vecMulVec`/
@@ -377,16 +384,3 @@ theorem Matrix.IsHermitian.trace_mul_topProjector_self {A : Matrix n n 𝕜} (hA
     unfold Majorization.topSum
     rw [Majorization.decreasingSort_of_antitone hA.eigenvalues₀_antitone]
   rw [htopSum_eq, RCLike.ofReal_sum]
-
-/-- The full sum of a Hermitian matrix's (sorted) eigenvalues is its trace — the `eigenvalues₀`
-counterpart of Mathlib's `Matrix.IsHermitian.trace_eq_sum_eigenvalues` (which sums the
-matrix-indexed `.eigenvalues` instead). Reindexes along `Fintype.equivOfCardEq (Fintype.card_fin
-_) : Fin (Fintype.card n) ≃ n`, the same equiv `.eigenvalues` is defined through. Needed for the
-"equal totals" half of `majorized_sum_kronecker_sortedDiagonal` (`SumKroneckerMajorization.lean`).
--/
-theorem Matrix.IsHermitian.sum_eigenvalues₀_eq_trace {A : Matrix n n 𝕜} (hA : A.IsHermitian) :
-    (∑ j, (hA.eigenvalues₀ j : 𝕜)) = A.trace := by
-  rw [hA.trace_eq_sum_eigenvalues]
-  exact Fintype.sum_equiv (Fintype.equivOfCardEq (Fintype.card_fin (Fintype.card n)))
-    (fun j => (hA.eigenvalues₀ j : 𝕜)) (fun i => (hA.eigenvalues i : 𝕜))
-    (fun j => by simp [Matrix.IsHermitian.eigenvalues])

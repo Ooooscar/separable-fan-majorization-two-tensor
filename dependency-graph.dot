@@ -1,0 +1,175 @@
+digraph DependencyGraph {
+  rankdir=TB
+  bgcolor="white"
+  nodesep=0.48
+  ranksep=0.6
+  fontname="Bahnschrift"
+  fontsize=24
+
+  node [shape=box, style="", fillcolor=none, color="black", penwidth=3.5,
+        fontsize=24, fontname="Bahnschrift", fontcolor="black", margin="0.19,0.125"];
+  edge [color="#666666", penwidth=2];
+
+  subgraph legend {
+    rank="max"
+    Legend [shape="plaintext", margin="0,0", label=<
+      <TABLE BORDER="2" CELLBORDER="0" CELLSPACING="4" CELLPADDING="0">
+      <TR><TD HEIGHT="6"></TD></TR>
+      <TR>
+        <TD COLSPAN="2" ALIGN="left"><FONT POINT-SIZE="25">  <B>Legend</B></FONT></TD>
+      </TR>
+      <TR><TD>
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="12" CELLPADDING="0">
+        <TR>
+          <TD WIDTH="35" COLOR="#c9740a" BGCOLOR="#f0b65544" BORDER="4"></TD>
+          <TD ALIGN="left">Main proof route</TD>
+        </TR>
+        <TR>
+          <TD WIDTH="35" COLOR="#0a57bb" BGCOLOR="#2288ff0a" BORDER="3.5"></TD>
+          <TD BORDER="0" ALIGN="left"><FONT COLOR="#0b51a6">Dependencies of final result only</FONT></TD>
+        </TR>
+        <TR>
+          <TD WIDTH="35" COLOR="#000" BGCOLOR="none" BORDER="3.5"></TD>
+          <TD BORDER="0" ALIGN="left">Dependencies of other steps</TD>
+        </TR>
+        <TR>
+          <TD WIDTH="35" STYLE="ROUNDED" COLOR="#3a7a0f" BGCOLOR="#99dd0010" BORDER="3.5"></TD>
+          <TD BORDER="0" ALIGN="left"><FONT COLOR="#243b10">Mathlib imports</FONT></TD>
+        </TR>
+        </TABLE>
+      </TD></TR>
+      </TABLE>
+    >]
+  }
+
+  subgraph nodes_main {
+    node [color="#c9740a", penwidth=3.8, style="filled,diagonals,rounded", fillcolor="#f0b65544"]
+
+    "Bilinear\nPositivity"
+    "Overlap\nBound"
+    "SumKronecker\nMajorization"
+    "SumKronecker\nWeakMajorization"
+  }
+
+  subgraph edges_main {
+    edge [color="#c9740a", penwidth=4]
+  
+    "Bilinear\nPositivity" -> "Overlap\nBound" -> "SumKronecker\nMajorization" -> "SumKronecker\nWeakMajorization"
+  }
+
+  subgraph nodes_general {
+    "PartialTrace"
+    "PosSemidef"
+    "SortedEigen-\nvectorBasis"
+    "Majorization"
+    "Projector"
+    "Spectral\nDecomposition"
+    "Trace\nInequality"
+  }
+
+  subgraph nodes_ky_fan {
+    node [color="#0a57bb", fontcolor="#0b51a6",style="filled",fillcolor="#2288ff0a"]
+
+    "Eigenvalue\nScaling"
+    "SingularValue"
+    "SingularValue\nDecomposition"
+    "Polar\nDecomposition"
+    "Matrix\nSqrt"
+    "Matrix\nAbs"
+    "Matrix\nPseudoinverse"
+    "Contraction\nFactorization"
+    "KyFan\nNorm"
+    "KyFan\nMaxPrinciple"
+    "KyFan\nCauchySchwarz"
+  }
+
+  subgraph nodes_mathlib {
+    node [color="#3a7a0f", fontcolor="#243b10", style="rounded,filled", fillcolor="#99dd0010"]
+
+    "_PosDef"
+    "_Fin.Tuple.Sort,\n_Real.Basic, ..."
+    "_Hermitian\nFunctionalCalculus"
+    "_Spectrum"
+    "_Order.Rearr\nangement"
+    "_Birkhoff"
+    "_Matrix.Order"
+    "_ColumnRow\nPartitioned"
+    "_Kronecker"
+  }
+
+  subgraph edges_general {
+    "Eigenvalue\nMonotonicity" -> "Overlap\nBound"
+    // "Spectral\nDecomposition" -> "Overlap\nBound"
+    "Trace\nInequality" -> "Overlap\nBound"
+    "PosSemidef" -> "Eigenvalue\nMonotonicity"
+    "SortedEigen-\nvectorBasis" -> "Eigenvalue\nMonotonicity"
+    "Majorization" -> "Eigenvalue\nMonotonicity"
+    "Spectral\nDecomposition" -> "Trace\nInequality"
+    "Majorization" -> "Spectral\nDecomposition"
+    "Projector" -> "Spectral\nDecomposition"
+    "PosSemidef" -> "Projector"
+    "SortedEigen-\nvectorBasis" -> "Projector"
+    "PartialTrace" -> "Bilinear\nPositivity"
+    "PosSemidef" -> "Bilinear\nPositivity"
+  }
+  
+  subgraph edges_ky_fan {
+    edge [color="#5585e3", penwidth=2]
+
+    "Polar\nDecomposition" -> "SumKronecker\nWeakMajorization"
+    "KyFan\nCauchySchwarz" -> "SumKronecker\nWeakMajorization"
+    "Contraction\nFactorization" -> "KyFan\nCauchySchwarz"
+    "KyFan\nMaxPrinciple" -> "KyFan\nCauchySchwarz"
+    "KyFan\nNorm" -> "KyFan\nCauchySchwarz"
+    "Matrix\nAbs" -> "KyFan\nCauchySchwarz"
+    "Spectral\nDecomposition" -> "KyFan\nMaxPrinciple"
+    "SingularValue\nDecomposition" -> "KyFan\nNorm"
+    "Trace\nInequality" -> "KyFan\nNorm"
+    "SingularValue" -> "Trace\nInequality"
+    "Matrix\nAbs" -> "Polar\nDecomposition"
+    "SingularValue\nDecomposition" -> "Polar\nDecomposition"
+    "Matrix\nSqrt" -> "Matrix\nAbs"
+    "SingularValue" -> "Matrix\nAbs"
+    "SingularValue" -> "SingularValue\nDecomposition"
+    "PosSemidef" -> "SingularValue"
+    "Eigenvalue\nScaling" -> "SingularValue"
+    "Matrix\nSqrt" -> "Contraction\nFactorization"
+    "Matrix\nPseudoinverse" -> "Contraction\nFactorization"
+  }
+
+  subgraph edges_into_ky_fan {
+    edge [color="#2a6df4", penwidth=1.5]
+  }
+  
+  subgraph edges_mathlib {
+    edge [color="#392", penwidth=2, style="dashed"]
+
+    "_Spectrum" -> "_PosDef"
+    "_PosDef" -> "_Matrix.Order"
+    "_Spectrum" -> "_Matrix.Order"
+    "_Spectrum" -> "_Hermitian\nFunctionalCalculus"[minlen=4]
+    
+    "_ColumnRow\nPartitioned" -> "KyFan\nCauchySchwarz"
+    "_Birkhoff" -> "Trace\nInequality"
+    "_Order.Rearr\nangement" -> "Trace\nInequality"
+    "_Matrix.Order" -> "PosSemidef"
+    "_PosDef" -> "SortedEigen-\nvectorBasis"
+    "_Hermitian\nFunctionalCalculus" -> "Matrix\nPseudoinverse"
+    "_PosDef" -> "Matrix\nPseudoinverse"
+    "_Hermitian\nFunctionalCalculus" -> "Matrix\nSqrt"
+    "_Matrix.Order" -> "Matrix\nSqrt"
+    "_Spectrum" -> "Eigenvalue\nScaling"[minlen=4]
+    "_Fin.Tuple.Sort,\n_Real.Basic, ..." -> "Majorization"
+    "_PosDef" -> "PartialTrace"[minlen=2]
+    "_Kronecker" -> "PartialTrace"
+  }
+
+  // subgraph rank0 {
+  //   rank=source
+  //   "_Spectrum"
+  // }
+  // subgraph rank1 {
+  //   rank=same
+  //   "_PosDef", "_Kronecker"
+  // }
+}

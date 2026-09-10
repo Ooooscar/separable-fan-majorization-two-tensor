@@ -1,5 +1,4 @@
 import NewProject.OverlapBound
-import NewProject.ForMathlib.Majorization
 
 /-!
 # Majorization for sums of Kronecker products of positive semidefinite operators

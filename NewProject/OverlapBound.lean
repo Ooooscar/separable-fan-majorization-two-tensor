@@ -1,14 +1,6 @@
-import NewProject.ForMathlib.PartialTrace
-import NewProject.ForMathlib.PosSemidef
-import NewProject.ForMathlib.Projector
 import NewProject.ForMathlib.EigenvalueMonotonicity
 import NewProject.ForMathlib.TraceInequality
 import NewProject.BilinearPositivity
-import NewProject.ForMathlib.SpectralDecomposition
-import Mathlib.LinearAlgebra.Matrix.Kronecker
-import Mathlib.Analysis.Matrix.Spectrum
-import Mathlib.Algebra.Star.StarProjection
-import Mathlib.Analysis.Matrix.Order
 
 /-!
 # Overlap bounds: `Tr[Q(A ⊗ B)] ≤ ∑ⱼ ∑ₖ λⱼ(A) λₖ(B) (min{j+1,μₖ} - min{j,μₖ})`

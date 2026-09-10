@@ -1,4 +1,3 @@
-import Mathlib.LinearAlgebra.UnitaryGroup
 import NewProject.ForMathlib.MatrixAbs
 import NewProject.ForMathlib.SingularValueDecomposition
 

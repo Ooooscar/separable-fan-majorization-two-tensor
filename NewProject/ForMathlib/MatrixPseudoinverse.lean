@@ -1,7 +1,5 @@
-import Mathlib.Algebra.Star.StarProjection
 import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
-import Mathlib.Analysis.Matrix.Order
-import Mathlib.LinearAlgebra.Matrix.PosDef
+import Mathlib.Analysis.Matrix.PosDef
 
 /-!
 # Pseudoinverses of positive semidefinite matrices

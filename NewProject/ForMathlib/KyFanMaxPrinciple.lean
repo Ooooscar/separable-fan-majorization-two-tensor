@@ -1,9 +1,4 @@
-import Mathlib.LinearAlgebra.Matrix.PosDef
-import NewProject.ForMathlib.Majorization
-import NewProject.ForMathlib.Projector
-import NewProject.ForMathlib.PosSemidef
 import NewProject.ForMathlib.SpectralDecomposition
-import NewProject.ForMathlib.EigenvalueMonotonicity
 
 /-!
 # The general Ky Fan maximum principle
@@ -21,7 +16,7 @@ remains is the linear-algebra bridge from "`Q` is a rank-`k` star-projection" to
 ## Proof roadmap
 
 Write `A`'s (sorted, decreasing) eigendecomposition as `A = ∑ₗ λₗ • uₗuₗ*` (`uₗ :=
-hA.sortedEigenvectorBasis l`, `EigenvalueMonotonicity.lean`), and set `cₗ := ⟨uₗ, Q uₗ⟩`.
+hA.sortedEigenvectorBasis l`, `SortedEigenvectorBasis.lean`), and set `cₗ := ⟨uₗ, Q uₗ⟩`.
 
 1. **Trace expansion** (`trace_mul_eq_sum_eigenvalues₀_mul_dotProduct_mulVec`, no projector
    hypothesis needed): `Tr[Q·A] = ∑ₗ λₗ · ⟨uₗ,Quₗ⟩`, by expanding `A` in its own eigenbasis and
@@ -87,7 +82,7 @@ end DiagonalBounds
 section TraceExpansion
 
 /-- **Step 1 of the roadmap.** Expanding `A` in its own (sorted, decreasing) eigenbasis
-`hA.sortedEigenvectorBasis` (`EigenvalueMonotonicity.lean`) turns `Tr[Q·A]` into a weighted sum of
+`hA.sortedEigenvectorBasis` (`SortedEigenvectorBasis.lean`) turns `Tr[Q·A]` into a weighted sum of
 the "diagonal entries" `⟨uₗ,Quₗ⟩` of `Q` against that eigenbasis, weighted by the eigenvalues. Pure
 algebra: no hypothesis on `Q` is needed (unlike `trace_mul_topProjector_self`, which needs `Q` to
 literally *be* `hA.topProjector k`, this holds for arbitrary `Q`). Proved the same way as that

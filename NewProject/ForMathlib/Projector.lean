@@ -1,11 +1,5 @@
-import Mathlib.Algebra.Star.StarProjection
-import Mathlib.LinearAlgebra.Matrix.Rank
-import Mathlib.LinearAlgebra.Matrix.Hermitian
-import Mathlib.LinearAlgebra.Trace
-import Mathlib.LinearAlgebra.Projection
-import Mathlib.Analysis.RCLike.Basic
-import NewProject.ForMathlib.EigenvalueMonotonicity
 import NewProject.ForMathlib.PosSemidef
+import NewProject.ForMathlib.SortedEigenvectorBasis
 
 /-!
 # Basic facts about star projections
@@ -22,6 +16,9 @@ onto `p` (`IsProj p f`), and `IsIdempotentElem.isProj_range` turns idempotency o
 
 ## Main results
 
+* `IsStarProjection.posSemidef`: A projector is positive definite. Follows from
+  `IsStarProjection.nonneg`, which holds in any star-ordered ring; here the Loewner order
+  (`Mathlib.Analysis.Matrix.Order`, scoped `MatrixOrder`) identifies `0 ≤ P` with `P.PosSemidef`.
 * `IsStarProjection.trace_eq_rank`: `P.trace = P.rank` for a star projection `P`.
 * `Matrix.isStarProjection_mul_conjTranspose_of_conjTranspose_mul_self_eq_one`: an isometry
   `U : Matrix n (Fin k) 𝕜` (`Uᴴ*U = 1`) makes `U*Uᴴ` a rank-`k` star projection.
@@ -35,6 +32,13 @@ open scoped ComplexOrder MatrixOrder
 variable {n 𝕜 : Type*} [Fintype n] [DecidableEq n] [RCLike 𝕜]
 
 omit [DecidableEq n] in
+/-- A projector matrix is positive semidefinite. -/
+theorem IsStarProjection.posSemidef {P : Matrix n n 𝕜} (hP : IsStarProjection P) :
+    P.PosSemidef :=
+  Matrix.nonneg_iff_posSemidef.mp hP.nonneg
+
+omit [DecidableEq n] in
+/-- A projector matrix's trace is equal to its rank. -/
 theorem IsStarProjection.trace_eq_rank {P : Matrix n n 𝕜} (hP : IsStarProjection P) :
     P.trace = (P.rank : 𝕜) := by
   classical
@@ -55,7 +59,7 @@ roadmap (`KyFanNorm.lean`). Lives here rather than in `KyFanCauchySchwarz.lean`,
 originally stated, since `KyFanNorm.lean` needs it too and cannot import that file (which itself
 imports `KyFanNorm.lean`).
 
-Fully proved: idempotency and self-adjointness of `U * Uᴴ` are immediate from `Uᴴ * U = 1`; the rank
+Proof: idempotency and self-adjointness of `U * Uᴴ` are immediate from `Uᴴ * U = 1`; the rank
 is `Matrix.rank_self_mul_conjTranspose` (`(U*Uᴴ).rank = U.rank`) combined with
 `Matrix.rank_conjTranspose_mul_self`/`Matrix.rank_one` (`U.rank = (Uᴴ*U).rank = (1 :
 Matrix (Fin k) (Fin k) 𝕜).rank = k`). -/

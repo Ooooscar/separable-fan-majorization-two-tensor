@@ -1,7 +1,3 @@
-import Mathlib.Algebra.Order.BigOperators.Ring.Finset
-import Mathlib.Algebra.Star.StarProjection
-import Mathlib.Analysis.InnerProductSpace.PiL2
-import Mathlib.Data.Matrix.Block
 import Mathlib.Data.Matrix.ColumnRowPartitioned
 import NewProject.ForMathlib.ContractionFactorization
 import NewProject.ForMathlib.KyFanMaxPrinciple

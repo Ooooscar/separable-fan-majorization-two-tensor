@@ -1,9 +1,3 @@
-import Mathlib.LinearAlgebra.Matrix.PosDef
-import Mathlib.Analysis.Matrix.PosDef
-import Mathlib.Analysis.Matrix.Spectrum
-import Mathlib.Analysis.InnerProductSpace.PiL2
-import Mathlib.Analysis.Normed.Lp.Matrix
-import Mathlib.LinearAlgebra.UnitaryGroup
 import NewProject.ForMathlib.SingularValue
 
 /-!

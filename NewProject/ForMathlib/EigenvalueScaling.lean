@@ -1,5 +1,4 @@
 import Mathlib.Analysis.Matrix.Spectrum
-import Mathlib.LinearAlgebra.UnitaryGroup
 
 /-!
 # Scaling a Hermitian matrix's eigenvalues

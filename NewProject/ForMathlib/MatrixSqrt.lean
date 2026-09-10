@@ -1,6 +1,5 @@
 import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
 import Mathlib.Analysis.Matrix.Order
-import Mathlib.LinearAlgebra.Matrix.PosDef
 
 /-!
 # Square roots of positive semidefinite matrices

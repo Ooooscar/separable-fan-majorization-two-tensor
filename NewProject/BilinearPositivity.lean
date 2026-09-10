@@ -1,6 +1,5 @@
 import NewProject.ForMathlib.PartialTrace
 import NewProject.ForMathlib.PosSemidef
-import Mathlib.LinearAlgebra.Matrix.Kronecker
 
 /-!
 # Joint positivity of `Φ(C, A) = Tr₁[C(A ⊗ 1)]`

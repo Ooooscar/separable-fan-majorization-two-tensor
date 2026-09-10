@@ -1,8 +1,6 @@
+import NewProject.ForMathlib.PosSemidef
+import NewProject.ForMathlib.SortedEigenvectorBasis
 import NewProject.ForMathlib.Majorization
-import Mathlib.Analysis.Matrix.Spectrum
-import Mathlib.Analysis.Matrix.Order
-import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
-import Mathlib.LinearAlgebra.Finsupp.LinearCombination
 
 /-!
 # Weyl's monotonicity theorem
@@ -40,32 +38,6 @@ variable {n 𝕜 : Type*} [Fintype n] [DecidableEq n] [RCLike 𝕜]
 /-- Local shorthand for the `EuclideanSpace 𝕜 n` inner product (Mathlib only declares `⟪·,·⟫` as
 `local notation`, never globally, so files that want it must redeclare it). -/
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
-
-section SortedEigenvectors
-
-variable {A : Matrix n n 𝕜} (hA : A.IsHermitian)
-
-/-- `A`'s orthonormal eigenvectors, reindexed by `Fin (Fintype.card n)` so that
-`sortedEigenvectorBasis hA k` is a unit eigenvector for the `k`-th sorted (decreasing) eigenvalue
-`hA.eigenvalues₀ k`. Also used directly by `SpectralDecomposition.lean`
-(`sum_eigenvalue₀_smul_vecMulVec`, `topProjector`, etc.) and `OverlapBound.lean`, rather than each
-site re-deriving this same reindexing inline. -/
-noncomputable def Matrix.IsHermitian.sortedEigenvectorBasis :
-    Fin (Fintype.card n) → EuclideanSpace 𝕜 n :=
-  fun k => hA.eigenvectorBasis (Fintype.equivOfCardEq (Fintype.card_fin _) k)
-
-theorem Matrix.IsHermitian.mulVec_sortedEigenvectorBasis (k : Fin (Fintype.card n)) :
-    A *ᵥ ⇑(hA.sortedEigenvectorBasis k) =
-      (hA.eigenvalues₀ k : 𝕜) • ⇑(hA.sortedEigenvectorBasis k) := by
-  simp [Matrix.IsHermitian.sortedEigenvectorBasis, mulVec_eigenvectorBasis,
-    Matrix.IsHermitian.eigenvalues]
-
-theorem Matrix.IsHermitian.orthonormal_sortedEigenvectorBasis :
-    Orthonormal 𝕜 hA.sortedEigenvectorBasis :=
-  hA.eigenvectorBasis.orthonormal.comp _
-    (Fintype.equivOfCardEq (Fintype.card_fin _)).injective
-
-end SortedEigenvectors
 
 section SpanDimension
 
@@ -230,18 +202,6 @@ theorem Matrix.IsHermitian.eigenvalues₀_mono {A B : Matrix n n 𝕜} (hA : A.I
   have hxnorm : (0 : ℝ) < ‖x‖ ^ 2 := by positivity
   nlinarith [hlow, hhigh, hmid]
 
-/-- **Bridging lemma**: `decreasingSort` is the identity on an already-`Antitone` tuple. Needed to
-turn `Majorization.topSum`'s `decreasingSort` (which re-sorts) back into a plain sum over
-`hA.eigenvalues₀`/`hB.eigenvalues₀` (already sorted, via `eigenvalues₀_antitone`) in
-`eigenvalues₀_weakMajorizedBy` below. Purely a fact about `Tuple.sort`, nothing eigenvalue-specific
-about it (same spirit as `Fin.sum_Iic_eq_sum_range_succ` in `SpectralDecomposition.lean`, kept
-local to its point of use rather than moved to `Majorization.lean`). -/
-theorem Majorization.decreasingSort_of_antitone {d : ℕ} {f : Fin d → ℝ} (hf : Antitone f) :
-    Majorization.decreasingSort f = f := by
-  have h1 : Antitone (f ∘ Tuple.sort (-f)) := Majorization.antitone_decreasingSort f
-  have h2 : Antitone (f ∘ Equiv.refl (Fin d)) := hf
-  simpa [Majorization.decreasingSort] using Tuple.unique_antitone h1 h2
-
 /-- **Weyl's monotonicity theorem** (weak form): if `B ≤ A` in the Loewner order, the eigenvalues
 of `B` are weakly majorized by the eigenvalues of `A`. Immediate termwise consequence of
 `eigenvalues₀_mono` (via `decreasingSort_of_antitone` to unfold `topSum`). -/
@@ -274,10 +234,3 @@ theorem Matrix.IsHermitian.eigenvalues₀_le_of_le_smul_one {A : Matrix n n 𝕜
   have hv := hM.dotProduct_mulVec_nonneg ⇑(hA.eigenvectorBasis i)
   rw [hMv, dotProduct_smul, hnorm, smul_eq_mul, mul_one, RCLike.ofReal_nonneg] at hv
   linarith
-
-/-- The eigenvalues (sorted, decreasing) of a positive semidefinite matrix are non-negative;
-the `eigenvalues₀`-indexed version of `Matrix.PosSemidef.eigenvalues_nonneg`. -/
-theorem Matrix.PosSemidef.eigenvalues₀_nonneg {A : Matrix n n 𝕜} (hA : A.PosSemidef)
-    (k : Fin (Fintype.card n)) : 0 ≤ hA.isHermitian.eigenvalues₀ k := by
-  simpa [Matrix.IsHermitian.eigenvalues] using
-    hA.eigenvalues_nonneg ((Fintype.equivOfCardEq (Fintype.card_fin _)) k)

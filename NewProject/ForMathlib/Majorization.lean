@@ -1,10 +1,7 @@
 import Mathlib.Data.Fin.Tuple.Sort
 import Mathlib.Data.Real.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Data.Finset.Fin
-import Mathlib.Data.Finset.Lattice.Fold
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 
@@ -30,6 +27,10 @@ We define majorization for tuples `Fin n → ℝ`, the shape produced by
 
 ## Main results
 
+* `Majorization.decreasingSort_of_antitone`: `decreasingSort` is the identity on an already-
+  `Antitone` tuple. Needed to turn `topSum`'s `decreasingSort` (which re-sorts) back into a plain
+  sum over an already-sorted tuple, e.g. `hA.eigenvalues₀` (`EigenvalueMonotonicity.lean`,
+  `SpectralDecomposition.lean`, `KyFanNorm.lean`).
 * `Majorization.sum_mul_le_topSum`: weighting `w` by a `[0,1]`-valued `c` summing to `k` cannot
   beat `topSum w k`, the sum of `w`'s `k` largest entries. Assembled from `exists_top_finset`
   (constructs the top-`k` index set) and `sum_mul_le_sum_of_threshold` (the abstract averaging
@@ -52,6 +53,15 @@ noncomputable def decreasingSort (f : Fin n → ℝ) : Fin n → ℝ :=
 theorem antitone_decreasingSort (f : Fin n → ℝ) : Antitone (decreasingSort f) := fun i j hij => by
   have h := Tuple.monotone_sort (-f) hij
   simpa [decreasingSort] using h
+
+/-- `decreasingSort` is the identity on an already-`Antitone` tuple. Needed to turn `topSum`'s
+`decreasingSort` (which re-sorts) back into a plain sum over an already-sorted tuple, e.g.
+`hA.eigenvalues₀` via `Matrix.IsHermitian.eigenvalues₀_antitone`
+(`EigenvalueMonotonicity.lean`/`SpectralDecomposition.lean`/`KyFanNorm.lean`). -/
+theorem decreasingSort_of_antitone {f : Fin n → ℝ} (hf : Antitone f) : decreasingSort f = f := by
+  have h1 : Antitone (f ∘ Tuple.sort (-f)) := antitone_decreasingSort f
+  have h2 : Antitone (f ∘ Equiv.refl (Fin n)) := hf
+  simpa [decreasingSort] using Tuple.unique_antitone h1 h2
 
 /-- Precomposing `f` with a permutation of its index type does not change its `decreasingSort`:
 `f` and `f ∘ σ` have the same multiset of values, just reindexed, so sorting them into decreasing

@@ -1,26 +1,20 @@
-import NewProject.ForMathlib.EigenvalueMonotonicity
-import NewProject.ForMathlib.Majorization
-import NewProject.ForMathlib.Projector
-import NewProject.ForMathlib.SingularValue
 import NewProject.ForMathlib.SingularValueDecomposition
-import NewProject.ForMathlib.SpectralDecomposition
 import NewProject.ForMathlib.TraceInequality
-import NewProject.ForMathlib.UnitarilyInvariantNorm
 
 /-!
 # Ky Fan `k`-norms
 
 Not in Mathlib. The Ky Fan `k`-norm of a matrix `A` is the sum of its `k` largest singular values,
-`Majorization.topSum A.singularValues k`. It is the standard first family of examples of a
-unitarily invariant norm (`Matrix.IsUnitarilyInvariantNorm`, `UnitarilyInvariantNorm.lean`): `k = 1`
-gives the operator norm and `k = Fintype.card ι` gives the trace norm.
+`Majorization.topSum A.singularValues k`. It is unitarily invariant
+(`Matrix.singularValues_unitary_conj`, `SingularValue.lean`) and, being definite, homogeneous, and
+subadditive (`kyFanNorm_eq_zero_iff`, `kyFanNorm_smul`, `kyFanNorm_add_le` below), a genuine norm:
+`k = 1` gives the operator norm and `k = Fintype.card ι` gives the trace norm.
 
 Mathlib's standard `p`-norms on `Fin n → ℝ` (`PiLp`/`EuclideanSpace`,
 `Mathlib.Analysis.Normed.Lp.PiLp`) are set up as a *type synonym* `PiLp p α` carrying a `Norm`
-instance found by instance resolution. `UnitarilyInvariantNorm.lean`'s module doc explains why that
-pattern is unsuitable here: `Matrix ι ι 𝕜` needs many unitarily invariant norms at once (one Ky Fan
-norm per `k`, Schatten norms, the operator norm, ...), not one canonical norm per type. So, like
-`Matrix.IsUnitarilyInvariantNorm` itself, `kyFanNorm` is a plain function taking `k` as an explicit
+instance found by instance resolution. That pattern is unsuitable here: `Matrix ι ι 𝕜` needs many
+unitarily invariant norms at once (one Ky Fan norm per `k`, Schatten norms, the operator norm, ...),
+not one canonical norm per type. So `kyFanNorm` is a plain function taking `k` as an explicit
 argument, in the same style as `Matrix.singularValues`/`Matrix.singularValueDiagonal`
 (`SingularValue.lean`).
 
@@ -36,10 +30,6 @@ argument, in the same style as `Matrix.singularValues`/`Matrix.singularValueDiag
   kyFanNorm k B`, via the general von Neumann trace inequality (`Matrix.trace_mul_conjTranspose_le`,
   `TraceInequality.lean`) and a star projection's eigenvalues being `0`/`1`
   (`IsStarProjection.eigenvalues₀_eq_zero_or_one`, `Projector.lean`).
-* `Matrix.isUnitarilyInvariantNorm_kyFanNorm`: for `1 ≤ k`, `kyFanNorm k` assembles
-  `kyFanNorm_eq_zero_iff`/`kyFanNorm_smul`/`kyFanNorm_add_le` above, plus unitary invariance
-  (`Matrix.singularValues_unitary_conj`, `SingularValue.lean`), into a genuine
-  `Matrix.IsUnitarilyInvariantNorm` (`UnitarilyInvariantNorm.lean`).
 -/
 
 open Matrix
@@ -326,10 +316,10 @@ theorem Matrix.re_trace_le_kyFanNorm_of_isometryPair {k : ℕ} (M : Matrix ι ι
       hc1 hcsum
   exact hvN.trans hfinal
 
-/-- **The triangle inequality for Ky Fan norms**, the last piece (together with
-`kyFanNorm_smul`/`kyFanNorm_real_smul` and `singularValues_unitary_conj`, `SingularValue.lean`)
-needed to exhibit `fun A => A.kyFanNorm k` (`1 ≤ k`) as a
-`Matrix.IsUnitarilyInvariantNorm` (`UnitarilyInvariantNorm.lean`).
+/-- **The triangle inequality for Ky Fan norms**: `(A + B).kyFanNorm k ≤ A.kyFanNorm k +
+B.kyFanNorm k`. Together with `kyFanNorm_eq_zero_iff`/`kyFanNorm_smul` (definiteness, homogeneity)
+and unitary invariance (`Matrix.singularValues_unitary_conj`, `SingularValue.lean`), this makes
+`fun A => A.kyFanNorm k` (`1 ≤ k`) a unitarily invariant norm.
 
 Proof (Ky Fan variational-formula route): take an isometry pair `U, V : Matrix ι (Fin k') 𝕜`
 realizing `(A+B).kyFanNorm k'` exactly via `Matrix.exists_isometryPair_trace_eq_kyFanNorm` above,
@@ -362,24 +352,3 @@ theorem Matrix.kyFanNorm_add_le (k : ℕ) (A B : Matrix ι ι 𝕜) :
       unfold Matrix.kyFanNorm; exact Majorization.topSum_eq_topSum_of_le _ hk.le
     rw [hsatAB, hsatA, hsatB]
     exact hcore (Fintype.card ι) le_rfl
-
-/-- **The Ky Fan `k`-norm is a unitarily invariant norm**, for `1 ≤ k`: `kyFanNorm_eq_zero_iff`,
-`kyFanNorm_smul`, and `kyFanNorm_add_le` above, plus unitary invariance
-(`Matrix.singularValues_unitary_conj`, `SingularValue.lean`), are exactly the four fields
-`Matrix.IsUnitarilyInvariantNorm` (`UnitarilyInvariantNorm.lean`) asks for. This packages them as
-a single instance, giving access to that file's derived facts (`nonneg`, `unitary_conj_left`,
-`unitary_conj_right`) for `kyFanNorm k` for free.
-
-Not registered as a global `instance`: `Matrix.IsUnitarilyInvariantNorm` takes the candidate norm
-`N` as an explicit argument rather than an `outParam`, and `1 ≤ k` is an ordinary hypothesis, not
-something instance search can discharge on its own — so this is used via `haveI` at the point of
-use, passing the specific `k` and `hk` explicitly. -/
-theorem Matrix.isUnitarilyInvariantNorm_kyFanNorm {k : ℕ} (hk : 1 ≤ k) :
-    Matrix.IsUnitarilyInvariantNorm (fun A : Matrix ι ι 𝕜 => A.kyFanNorm k) where
-  eq_zero' := Matrix.kyFanNorm_eq_zero_iff hk _
-  smul' := fun c A => Matrix.kyFanNorm_smul c k A
-  add_le' := fun A B => Matrix.kyFanNorm_add_le k A B
-  unitary_conj' := fun U V A => by
-    show ((U : Matrix ι ι 𝕜) * A * (V : Matrix ι ι 𝕜)).kyFanNorm k = A.kyFanNorm k
-    unfold Matrix.kyFanNorm
-    rw [Matrix.singularValues_unitary_conj U V A]

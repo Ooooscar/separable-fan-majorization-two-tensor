@@ -1,5 +1,4 @@
 import Mathlib.Analysis.Matrix.Order
-import Mathlib.Algebra.Star.StarProjection
 
 /-!
 # General facts about positive semidefinite matrices
@@ -30,7 +29,7 @@ theorem Matrix.PosSemidef.trace_mul_nonneg {A B : Matrix n n 𝕜}
 omit [DecidableEq n] in
 /-- The quadratic form `uᴴ N u` as a trace against the rank-one operator `u uᴴ`.
 
-This needs no positivity at all: it is the `a := u`, `b := star u` case of the general identity
+This is the `a := u`, `b := star u` case of the general identity
 `(N * vecMulVec a b).trace = b ⬝ᵥ (N *ᵥ a)`, which itself follows immediately from
 `Matrix.mul_vecMulVec` (`N * vecMulVec a b = vecMulVec (N *ᵥ a) b`) and `Matrix.trace_vecMulVec`
 (`(vecMulVec a b).trace = a ⬝ᵥ b`). It earns its keep here because this is exactly the shape
@@ -39,11 +38,9 @@ theorem Matrix.dotProduct_mulVec_eq_trace_mul_vecMulVec (N : Matrix n n 𝕜) (u
     star u ⬝ᵥ (N *ᵥ u) = (N * vecMulVec u (star u)).trace := by
   rw [Matrix.mul_vecMulVec, Matrix.trace_vecMulVec, dotProduct_comm]
 
-omit [DecidableEq n] in
-/-- A projector (self-adjoint idempotent, `IsStarProjection`) is positive semidefinite: its
-eigenvalues are `0` or `1`. Follows from `IsStarProjection.nonneg`, which holds in any
-star-ordered ring; here the Loewner order (`Mathlib.Analysis.Matrix.Order`, scoped `MatrixOrder`)
-identifies `0 ≤ P` with `P.PosSemidef`. -/
-theorem IsStarProjection.posSemidef {P : Matrix n n 𝕜} (hP : IsStarProjection P) :
-    P.PosSemidef :=
-  Matrix.nonneg_iff_posSemidef.mp hP.nonneg
+/-- The eigenvalues (sorted, decreasing) of a positive semidefinite matrix are non-negative;
+the `eigenvalues₀`-indexed version of `Matrix.PosSemidef.eigenvalues_nonneg`. -/
+theorem Matrix.PosSemidef.eigenvalues₀_nonneg {A : Matrix n n 𝕜} (hA : A.PosSemidef)
+    (k : Fin (Fintype.card n)) : 0 ≤ hA.isHermitian.eigenvalues₀ k := by
+  simpa [Matrix.IsHermitian.eigenvalues] using
+    hA.eigenvalues_nonneg ((Fintype.equivOfCardEq (Fintype.card_fin _)) k)

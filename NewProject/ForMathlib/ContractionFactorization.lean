@@ -1,5 +1,3 @@
-import Mathlib.Data.Matrix.Block
-import Mathlib.Analysis.Matrix.Order
 import NewProject.ForMathlib.MatrixSqrt
 import NewProject.ForMathlib.MatrixPseudoinverse
 

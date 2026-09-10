@@ -1,6 +1,4 @@
-import Mathlib.Analysis.Matrix.Spectrum
 import Mathlib.Analysis.Convex.Birkhoff
-import Mathlib.LinearAlgebra.Matrix.Permutation
 import Mathlib.Algebra.Order.Rearrangement
 import NewProject.ForMathlib.SingularValue
 import NewProject.ForMathlib.SpectralDecomposition
