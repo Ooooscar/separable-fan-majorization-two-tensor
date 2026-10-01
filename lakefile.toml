@@ -1,7 +1,7 @@
-name = "newProject"
+name = "separableFanMajorization"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["NewProject"]
+defaultTargets = ["SeparableFanMajorization"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -16,4 +16,4 @@ scope = "leanprover-community"
 rev = "v4.33.0-rc1"
 
 [[lean_lib]]
-name = "NewProject"
+name = "SeparableFanMajorization"

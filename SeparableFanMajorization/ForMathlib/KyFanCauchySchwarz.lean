@@ -1,8 +1,8 @@
 import Mathlib.Data.Matrix.ColumnRowPartitioned
-import NewProject.ForMathlib.ContractionFactorization
-import NewProject.ForMathlib.KyFanMaxPrinciple
-import NewProject.ForMathlib.KyFanNorm
-import NewProject.ForMathlib.MatrixAbs
+import SeparableFanMajorization.ForMathlib.ContractionFactorization
+import SeparableFanMajorization.ForMathlib.KyFanMaxPrinciple
+import SeparableFanMajorization.ForMathlib.KyFanNorm
+import SeparableFanMajorization.ForMathlib.MatrixAbs
 
 /-!
 # Cauchy–Schwarz inequality for Ky Fan norms

@@ -9,7 +9,7 @@ functional calculus for Hermitian matrices, `Matrix.IsHermitian.cfc`,
 `Mathlib.Analysis.Matrix.HermitianFunctionalCalculus`). We define `hA.sqrt` for `hA : A.PosSemidef`
 directly as `hA.isHermitian.cfc Real.sqrt`, i.e. `U * diagonal (√ ∘ eigenvalues) * Uᴴ` for
 `U := hA.isHermitian.eigenvectorUnitary`. Needed by `MatrixAbs.lean` (`Matrix.abs M := (Mᴴ *
-M).sqrt`), a step towards `SumKroneckerWeakMajorization.lean`'s Rico–Wolf reduction to the
+M).sqrt`), a step towards `SumKroneckerWeakMajorization.lean`'s [WZ26] reduction to the
 positive semidefinite case.
 
 ## Main definitions

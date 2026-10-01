@@ -1,18 +1,23 @@
-import NewProject.OverlapBound
+import SeparableFanMajorization.OverlapBound
 
 /-!
 # Majorization for sums of Kronecker products of positive semidefinite operators
 
-The capstone theorem this whole project builds towards: for finite families `A⁽¹⁾, …, A⁽ᵐ⁾` on
-`𝕜^dim1` and `B⁽¹⁾, …, B⁽ᵐ⁾` on `𝕜^dim2`, all positive semidefinite,
+The positive semidefinite case of the separable Ky Fan majorization for two tensor factors: for
+finite families `A⁽¹⁾, …, A⁽ᵐ⁾` on `𝕜^dim1` and `B⁽¹⁾, …, B⁽ᵐ⁾` on `𝕜^dim2`, all positive
+semidefinite,
 ```
-λ(∑ᵢ A⁽ⁱ⁾ ⊗ B⁽ⁱ⁾) ≺ λ(∑ᵢ A⁽ⁱ⁾↓ ⊗ B⁽ⁱ⁾↓)
+λ(∑ᵢ A⁽ⁱ⁾ ⊗ B⁽ⁱ⁾) ≺ ∑ᵢ λ(A⁽ⁱ⁾) ⊗ λ(B⁽ⁱ⁾)
 ```
-where `X↓` (`Matrix.PosSemidef.sortedDiagonal`) is the diagonal matrix of `X`'s eigenvalues (one
-per matrix index, order irrelevant), and `λ` is `Matrix.IsHermitian.eigenvalues₀`.
+where `λ` (`Matrix.IsHermitian.eigenvalues₀`) denotes eigenvalues sorted in decreasing order.
 
-* `Matrix.PosSemidef.sortedDiagonal`/`Matrix.PosSemidef.posSemidef_sortedDiagonal`: `X↓` and its
-  positive semidefiniteness.
+The right-hand side `∑ᵢ λ(A⁽ⁱ⁾) ⊗ λ(B⁽ⁱ⁾)` is realized as a vector of eigenvalues:
+`Matrix.PosSemidef.sortedDiagonal A⁽ⁱ⁾` is the diagonal matrix of `A⁽ⁱ⁾`'s eigenvalues (one per
+matrix index, order irrelevant), `∑ᵢ sortedDiagonal A⁽ⁱ⁾ ⊗ₖ sortedDiagonal B⁽ⁱ⁾` is positive
+semidefinite, and its eigenvalues are exactly what `∑ᵢ λ(A⁽ⁱ⁾) ⊗ λ(B⁽ⁱ⁾)` means as a vector.
+
+* `Matrix.PosSemidef.sortedDiagonal`/`Matrix.PosSemidef.posSemidef_sortedDiagonal`: `λ(A)`
+  realized as a diagonal matrix, and its positive semidefiniteness.
 * `Matrix.posSemidef_sum_kronecker`: `∑ᵢ A⁽ⁱ⁾ ⊗ B⁽ⁱ⁾` is positive semidefinite (so that its
   eigenvalues, via `.isHermitian.eigenvalues₀`, make sense), from `PosSemidef.kronecker` and
   closure of the PSD cone under sums.
@@ -31,7 +36,7 @@ open scoped Kronecker ComplexOrder MatrixOrder Majorization
 variable {dim1 dim2 𝕜 : Type*} [Fintype dim1] [Fintype dim2] [DecidableEq dim1] [DecidableEq dim2]
   [RCLike 𝕜]
 
-/-- The diagonal matrix of a positive semidefinite `A`'s eigenvalues: this is the `A↓` of
+/-- The diagonal matrix of a positive semidefinite `A`'s eigenvalues: this realizes `λ(A)` in
 `majorized_sum_kronecker_sortedDiagonal` below. Built from `hA.isHermitian.eigenvalues : ι → ℝ`
 (Mathlib's *matrix-indexed* eigenvalues), deliberately not `.eigenvalues₀ ∘ Fintype.equivFin ι` —
 this lines up directly with the `.eigenvectorBasis`-built machinery reused from
@@ -158,8 +163,9 @@ Proof, in six steps (`μ := ` the eigenvalues of `Q`'s left partial trace):
 3. (`hsum_c`) `∑ c = k`: `0 ≤ Q ≤ 1` gives `0 ≤ μ ≤ Fintype.card dim1` (via `Q`'s partial trace),
    making each `j`-sum (fixed `l`) a telescoping sum collapsing to `μ l`, and
    `∑ₗ μ l = Tr[Q.traceLeft] = Tr[Q] = k`.
-4. (`hw_eq`, `hMdiag_eq`) Identify `w` with the diagonal entries of `∑ᵢ A⁽ⁱ⁾↓⊗B⁽ⁱ⁾↓` (a diagonal
-   matrix, as a sum of Kronecker products of diagonals, via `Matrix.diagonal_kronecker_diagonal`),
+4. (`hw_eq`, `hMdiag_eq`) Identify `w` with the diagonal entries of
+   `∑ᵢ sortedDiagonal A⁽ⁱ⁾ ⊗ₖ sortedDiagonal B⁽ⁱ⁾` (a diagonal matrix, as a sum of Kronecker
+   products of diagonals, via `Matrix.diagonal_kronecker_diagonal`),
    reindexed along `e0 : dim1 × dim2 ≃ Fin (Fintype.card (dim1 × dim2))`.
 5. (`htopSum_eq`) `Matrix.IsHermitian.topSum_eigenvalues₀_diagonal` above turns this into
    `topSum w k = topSum` of the sorted-diagonal side's `eigenvalues₀`.
@@ -306,8 +312,9 @@ theorem trace_mul_le_topSum_sortedDiagonal {m : ℕ} {A : Fin m → Matrix dim1 
             (min ((j : ℝ) + 1) (μ l) - min (j : ℝ) (μ l)) := Finset.sum_comm
       _ = ∑ l : Fin (Fintype.card dim2), μ l := Finset.sum_congr rfl (fun l _ => htelescope l)
       _ = (k : ℝ) := hsum_mu
-  -- Step 6: identify `w` with the diagonal entries of `∑ᵢ A⁽ⁱ⁾↓⊗B⁽ⁱ⁾↓`, reindexed along
-  -- `e0 : dim1 × dim2 ≃ Fin (Fintype.card (dim1 × dim2))`: `∑ᵢ A⁽ⁱ⁾↓⊗B⁽ⁱ⁾↓` is diagonal (Kronecker
+  -- Step 6: identify `w` with the diagonal entries of
+  -- `M' := ∑ᵢ sortedDiagonal A⁽ⁱ⁾ ⊗ₖ sortedDiagonal B⁽ⁱ⁾`, reindexed along
+  -- `e0 : dim1 × dim2 ≃ Fin (Fintype.card (dim1 × dim2))`: `M'` is diagonal (Kronecker
   -- of diagonals, summed) with diagonal-defining function `d mn := ∑ᵢ eigenvalues(A⁽ⁱ⁾) mn.1 *
   -- eigenvalues(B⁽ⁱ⁾) mn.2`, and unwinding `E = (e_A.prodCongr e_B).trans e0` together with
   -- `eigenvalues = eigenvalues₀ ∘ e_A.symm` (`Matrix.IsHermitian.eigenvalues`'s definition) shows
@@ -358,15 +365,14 @@ theorem trace_mul_le_topSum_sortedDiagonal {m : ℕ} {A : Fin m → Matrix dim1 
   rw [htopSum_eq]
   exact RCLike.ofReal_le_ofReal.mpr (Majorization.sum_mul_le_topSum w c k hk hc0 hc1 hsum_c)
 
-/-- **Final theorem**: for finite families `A⁽¹⁾, …, A⁽ᵐ⁾` of positive semidefinite operators on
-`dim1` and `B⁽¹⁾, …, B⁽ᵐ⁾` of positive semidefinite operators on `dim2`, the (decreasing-sorted)
-eigenvalues of `∑ᵢ A⁽ⁱ⁾ ⊗ B⁽ⁱ⁾` are majorized by the eigenvalues of `∑ᵢ A⁽ⁱ⁾↓ ⊗ B⁽ⁱ⁾↓`, where `X↓`
-(`Matrix.PosSemidef.sortedDiagonal`) is the diagonal matrix of `X`'s eigenvalues sorted in
-decreasing order.
+/-- **Separable Ky Fan majorization, PSD case**: for finite families `A⁽¹⁾, …, A⁽ᵐ⁾` of positive
+semidefinite operators on `dim1` and `B⁽¹⁾, …, B⁽ᵐ⁾` of positive semidefinite operators on `dim2`,
+`λ(∑ᵢ A⁽ⁱ⁾ ⊗ B⁽ⁱ⁾) ≺ ∑ᵢ λ(A⁽ⁱ⁾) ⊗ λ(B⁽ⁱ⁾)`, the right-hand side realized as the eigenvalues of
+`M' := ∑ᵢ sortedDiagonal A⁽ⁱ⁾ ⊗ₖ sortedDiagonal B⁽ⁱ⁾` (`Matrix.PosSemidef.sortedDiagonal`).
 
 `MajorizedBy` unfolds to `WeakMajorizedBy` + equal totals:
 
-* *Equal totals*: `Tr[M] = Tr[M↓]` termwise (`Matrix.trace_kronecker` +
+* *Equal totals*: `Tr[M] = Tr[M']` termwise (`Matrix.trace_kronecker` +
   `Matrix.IsHermitian.trace_eq_sum_eigenvalues`, `sortedDiagonal` being diagonal), then
   `Matrix.IsHermitian.sum_eigenvalues₀_eq_trace` (`SpectralDecomposition.lean`) turns trace
   equality into `eigenvalues₀`-sum equality.
@@ -376,7 +382,7 @@ decreasing order.
   (`Matrix.IsHermitian.trace_mul_topProjector_self`, the "self" Ky Fan equality — no need for the
   full variational sup over all rank-`k` projectors, only this specific `Q_k`), and
   `trace_mul_le_topSum_sortedDiagonal` above bounds `Tr[Q_k · M]` by
-  `topSum (M↓.eigenvalues₀) k`. -/
+  `topSum (M'.eigenvalues₀) k`. -/
 theorem majorized_sum_kronecker_sortedDiagonal {m : ℕ} {A : Fin m → Matrix dim1 dim1 𝕜}
     {B : Fin m → Matrix dim2 dim2 𝕜} (hA : ∀ i, (A i).PosSemidef) (hB : ∀ i, (B i).PosSemidef) :
     (Matrix.posSemidef_sum_kronecker hA hB).isHermitian.eigenvalues₀
@@ -397,7 +403,7 @@ theorem majorized_sum_kronecker_sortedDiagonal {m : ℕ} {A : Fin m → Matrix d
     have hbound := trace_mul_le_topSum_sortedDiagonal hA hB hQproj k hQrank
     rw [hQtrace] at hbound
     exact_mod_cast hbound
-  · -- Equal totals: both sides' eigenvalues sum to `Tr[M] = Tr[M↓]`.
+  · -- Equal totals: both sides' eigenvalues sum to `Tr[M] = Tr[M']`.
     have hAitrace : ∀ i, (A i).trace = (hA i).sortedDiagonal.trace := fun i => by
       simp only [Matrix.PosSemidef.sortedDiagonal, Matrix.trace_diagonal]
       exact (hA i).isHermitian.trace_eq_sum_eigenvalues

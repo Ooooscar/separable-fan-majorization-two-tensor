@@ -1,5 +1,5 @@
-import NewProject.ForMathlib.MatrixSqrt
-import NewProject.ForMathlib.MatrixPseudoinverse
+import SeparableFanMajorization.ForMathlib.MatrixSqrt
+import SeparableFanMajorization.ForMathlib.MatrixPseudoinverse
 
 /-!
 # Douglas' factorization lemma for block positive semidefinite matrices

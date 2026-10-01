@@ -1,12 +1,12 @@
-import NewProject.ForMathlib.MatrixAbs
-import NewProject.ForMathlib.SingularValueDecomposition
+import SeparableFanMajorization.ForMathlib.MatrixAbs
+import SeparableFanMajorization.ForMathlib.SingularValueDecomposition
 
 /-!
 # Polar decomposition of a square matrix
 
 Not in Mathlib. Every square matrix `M` factors as `M = U * |M|` with `U` unitary and `|M|`
 (`Matrix.abs`, `MatrixAbs.lean`) positive semidefinite — a step towards
-`SumKroneckerWeakMajorization.lean`'s Rico–Wolf reduction to the positive semidefinite case.
+`SumKroneckerWeakMajorization.lean`'s [WZ26] reduction to the positive semidefinite case.
 
 ## Main results
 

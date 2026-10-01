@@ -1,5 +1,5 @@
-import NewProject.ForMathlib.Majorization
-import NewProject.ForMathlib.Projector
+import SeparableFanMajorization.ForMathlib.Majorization
+import SeparableFanMajorization.ForMathlib.Projector
 
 /-!
 # Spectral decomposition as a sum of rank-one projectors

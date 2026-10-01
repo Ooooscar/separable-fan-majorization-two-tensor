@@ -1,6 +1,6 @@
-import NewProject.ForMathlib.PosSemidef
-import NewProject.ForMathlib.SortedEigenvectorBasis
-import NewProject.ForMathlib.Majorization
+import SeparableFanMajorization.ForMathlib.PosSemidef
+import SeparableFanMajorization.ForMathlib.SortedEigenvectorBasis
+import SeparableFanMajorization.ForMathlib.Majorization
 
 /-!
 # Weyl's monotonicity theorem

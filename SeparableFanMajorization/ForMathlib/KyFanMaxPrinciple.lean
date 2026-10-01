@@ -1,4 +1,4 @@
-import NewProject.ForMathlib.SpectralDecomposition
+import SeparableFanMajorization.ForMathlib.SpectralDecomposition
 
 /-!
 # The general Ky Fan maximum principle

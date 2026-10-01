@@ -1,6 +1,6 @@
-import NewProject.ForMathlib.PolarDecomposition
-import NewProject.ForMathlib.KyFanCauchySchwarz
-import NewProject.SumKroneckerMajorization
+import SeparableFanMajorization.ForMathlib.PolarDecomposition
+import SeparableFanMajorization.ForMathlib.KyFanCauchySchwarz
+import SeparableFanMajorization.SumKroneckerMajorization
 
 /-!
 # Weak majorization for sums of Kronecker products
@@ -32,10 +32,10 @@ matrices with nonnegative entries), and its
 
 ## Roadmap for proving `weakMajorized_sum_kronecker_singularValueDiagonal`
 
-Follows the Rico–Wolf argument (as in Bhatia, *Matrix Analysis*, via the Cauchy–Schwarz inequality
-for unitarily invariant norms, `IX.5`), reducing the general case to the PSD case
-(`majorized_sum_kronecker_sortedDiagonal`) already proved in `SumKroneckerMajorization.lean`. Write
-`M l := A l ⊗ₖ B l`:
+Follows the argument of [WZ26], which reduces the general case to the PSD case
+(`majorized_sum_kronecker_sortedDiagonal`, already proved in `SumKroneckerMajorization.lean`) via
+the Cauchy–Schwarz inequality for unitarily invariant norms (Bhatia, *Matrix Analysis*, `IX.5`).
+Write `M l := A l ⊗ₖ B l`:
 
 1. **PSD matrix square root**, `Matrix.PosSemidef.sqrt` (`ForMathlib/MatrixSqrt.lean`), built from
    the continuous functional calculus for Hermitian matrices

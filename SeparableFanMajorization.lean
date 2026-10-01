@@ -1,0 +1,27 @@
+-- `ForMathlib/` holds results of general mathematical interest (partial trace, positive
+-- semidefiniteness, spectral/singular-value decomposition, majorization, Ky Fan norms, ...) that
+-- are, in the author's judgment, reasonable candidates for upstreaming to Mathlib. The remaining
+-- imports below are specific to the two-fold case of the separable Fan majorization.
+import SeparableFanMajorization.ForMathlib.Majorization
+import SeparableFanMajorization.ForMathlib.PartialTrace
+import SeparableFanMajorization.ForMathlib.PosSemidef
+import SeparableFanMajorization.ForMathlib.Projector
+import SeparableFanMajorization.ForMathlib.SortedEigenvectorBasis
+import SeparableFanMajorization.ForMathlib.EigenvalueMonotonicity
+import SeparableFanMajorization.ForMathlib.EigenvalueScaling
+import SeparableFanMajorization.ForMathlib.SpectralDecomposition
+import SeparableFanMajorization.ForMathlib.TraceInequality
+import SeparableFanMajorization.ForMathlib.SingularValue
+import SeparableFanMajorization.ForMathlib.SingularValueDecomposition
+import SeparableFanMajorization.ForMathlib.KyFanNorm
+import SeparableFanMajorization.ForMathlib.MatrixSqrt
+import SeparableFanMajorization.ForMathlib.MatrixPseudoinverse
+import SeparableFanMajorization.ForMathlib.ContractionFactorization
+import SeparableFanMajorization.ForMathlib.MatrixAbs
+import SeparableFanMajorization.ForMathlib.PolarDecomposition
+import SeparableFanMajorization.ForMathlib.KyFanMaxPrinciple
+import SeparableFanMajorization.ForMathlib.KyFanCauchySchwarz
+import SeparableFanMajorization.BilinearPositivity
+import SeparableFanMajorization.OverlapBound
+import SeparableFanMajorization.SumKroneckerMajorization
+import SeparableFanMajorization.SumKroneckerWeakMajorization

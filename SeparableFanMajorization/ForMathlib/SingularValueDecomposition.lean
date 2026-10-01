@@ -1,4 +1,4 @@
-import NewProject.ForMathlib.SingularValue
+import SeparableFanMajorization.ForMathlib.SingularValue
 
 /-!
 # Singular value decomposition of a square matrix

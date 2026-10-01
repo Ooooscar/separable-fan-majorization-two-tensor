@@ -1,5 +1,5 @@
-import NewProject.ForMathlib.SingularValueDecomposition
-import NewProject.ForMathlib.TraceInequality
+import SeparableFanMajorization.ForMathlib.SingularValueDecomposition
+import SeparableFanMajorization.ForMathlib.TraceInequality
 
 /-!
 # Ky Fan `k`-norms
@@ -110,7 +110,7 @@ theorem Matrix.kyFanNorm_eq_zero_iff {k : ℕ} (hk : 1 ≤ k) (A : Matrix ι ι 
     exact Matrix.trace_conjTranspose_mul_self_eq_zero_iff.mp htrace
 
 /-- When `f` is already sorted in decreasing order, its top-`k` sum (`Majorization.topSum`,
-`NewProject/ForMathlib/Majorization.lean`) is literally the sum of its first `k` entries, read off
+`SeparableFanMajorization/ForMathlib/Majorization.lean`) is literally the sum of its first `k` entries, read off
 along `Fin.castLE hk : Fin k → Fin n` — no sorting permutation needed, unlike the general top-`k`
 finset of `Majorization.exists_top_finset` (`Majorization.lean`). Needed by
 `Matrix.exists_isometryPair_trace_eq_kyFanNorm` below, to identify the trace of the constructed

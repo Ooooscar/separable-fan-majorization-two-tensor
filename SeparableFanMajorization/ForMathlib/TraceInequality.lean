@@ -1,7 +1,7 @@
 import Mathlib.Analysis.Convex.Birkhoff
 import Mathlib.Algebra.Order.Rearrangement
-import NewProject.ForMathlib.SingularValue
-import NewProject.ForMathlib.SpectralDecomposition
+import SeparableFanMajorization.ForMathlib.SingularValue
+import SeparableFanMajorization.ForMathlib.SpectralDecomposition
 
 /-!
 # Von Neumann's trace inequality

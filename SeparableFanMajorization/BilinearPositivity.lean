@@ -1,5 +1,5 @@
-import NewProject.ForMathlib.PartialTrace
-import NewProject.ForMathlib.PosSemidef
+import SeparableFanMajorization.ForMathlib.PartialTrace
+import SeparableFanMajorization.ForMathlib.PosSemidef
 
 /-!
 # Joint positivity of `Φ(C, A) = Tr₁[C(A ⊗ 1)]`

@@ -1,12 +1,12 @@
-import NewProject.ForMathlib.MatrixSqrt
-import NewProject.ForMathlib.SingularValue
+import SeparableFanMajorization.ForMathlib.MatrixSqrt
+import SeparableFanMajorization.ForMathlib.SingularValue
 
 /-!
 # Absolute value of a square matrix
 
 Not in Mathlib. The absolute value `|M| := (Mᴴ * M).sqrt` (`Matrix.PosSemidef.sqrt`,
 `MatrixSqrt.lean`) of a general square matrix `M` (not necessarily Hermitian/positive
-semidefinite), a step towards `SumKroneckerWeakMajorization.lean`'s Rico–Wolf reduction
+semidefinite), a step towards `SumKroneckerWeakMajorization.lean`'s [WZ26] reduction
 (`|A l ⊗ B l| = |A l| ⊗ |B l|`) to the positive semidefinite case already proved in
 `SumKroneckerMajorization.lean`.
 

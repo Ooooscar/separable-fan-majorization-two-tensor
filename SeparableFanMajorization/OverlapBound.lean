@@ -1,6 +1,6 @@
-import NewProject.ForMathlib.EigenvalueMonotonicity
-import NewProject.ForMathlib.TraceInequality
-import NewProject.BilinearPositivity
+import SeparableFanMajorization.ForMathlib.EigenvalueMonotonicity
+import SeparableFanMajorization.ForMathlib.TraceInequality
+import SeparableFanMajorization.BilinearPositivity
 
 /-!
 # Overlap bounds: `Tr[Q(A ⊗ B)] ≤ ∑ⱼ ∑ₖ λⱼ(A) λₖ(B) (min{j+1,μₖ} - min{j,μₖ})`

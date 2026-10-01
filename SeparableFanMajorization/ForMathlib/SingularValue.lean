@@ -1,5 +1,5 @@
-import NewProject.ForMathlib.PosSemidef
-import NewProject.ForMathlib.EigenvalueScaling
+import SeparableFanMajorization.ForMathlib.PosSemidef
+import SeparableFanMajorization.ForMathlib.EigenvalueScaling
 
 /-!
 # Singular values of a square matrix

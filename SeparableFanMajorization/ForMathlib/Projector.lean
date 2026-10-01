@@ -1,5 +1,5 @@
-import NewProject.ForMathlib.PosSemidef
-import NewProject.ForMathlib.SortedEigenvectorBasis
+import SeparableFanMajorization.ForMathlib.PosSemidef
+import SeparableFanMajorization.ForMathlib.SortedEigenvectorBasis
 
 /-!
 # Basic facts about star projections
