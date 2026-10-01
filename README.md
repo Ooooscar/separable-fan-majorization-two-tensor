@@ -35,6 +35,13 @@ trace inequality, and Ky Fan norms — together with bounds on the overlap `Tr[Q
 projector `Q` with a product operator `A ⊗ B`. `SeparableFanMajorization.lean` imports every file
 below; that's the project's entry point.
 
+## Dependency graph
+
+![Import graph of the project's files and the Mathlib modules they build on](dependency-graph.svg)
+
+The graph is generated from [`dependency-graph.dot`](dependency-graph.dot) with
+`dot -Tsvg:cairo dependency-graph.dot -o dependency-graph.svg` ([Graphviz](https://graphviz.org)).
+
 ## Project structure
 
 The project is split into two parts:
@@ -45,8 +52,7 @@ The project is split into two parts:
 * [`SeparableFanMajorization/`](SeparableFanMajorization) (the project's own root) — the chain of
   results specific to the main theorem, built on top of `ForMathlib/`.
 
-Files are listed in rough dependency order (later files import earlier ones). A graph of the
-import structure is in [`dependency-graph.dot`](dependency-graph.dot).
+Files are listed in rough dependency order (later files import earlier ones).
 
 ### `SeparableFanMajorization/ForMathlib/`
 
